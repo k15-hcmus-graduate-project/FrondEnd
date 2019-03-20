@@ -1,0 +1,17 @@
+@import 'src/assets/scss/theme_color';
+@import 'src/assets/scss/variables';
+@import 'src/assets/scss/mixin';
+@import 'src/assets/scss/responsive';
+
+.wrapper {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    height: 100%;
+    margin-top: -85px;
+}
+
+@media (max-width: 767px) {
+    .wrapper {
+        display: block;
+    }
+}

@@ -1,0 +1,7 @@
+const FETCH_ORDERS = 'FETCH_ORDERS';
+const FETCH_ORDER_DETAIL = 'FETCH_ORDER_DETAIL';
+
+export default {
+    FETCH_ORDERS,
+    FETCH_ORDER_DETAIL
+};

@@ -1,0 +1,143 @@
+@import 'src/assets/scss/theme_color';
+@import 'src/assets/scss/variables';
+@import 'src/assets/scss/mixin';
+@import 'src/assets/scss/responsive';
+
+/* :: 14.0 Checkout Area CSS */
+.shippingmethod-selected {
+    font-weight: 900 !important;
+    background-color: #00000015;
+}
+
+.shipping-method-name {
+    color: black;
+
+    i.fa-check-square {
+        color: #0076fd !important;
+    }
+}
+
+.shipping-method-container {
+    margin-bottom: 10px !important;
+}
+
+.shipping-method-container:not(.is-invalid) {
+    border: none;
+}
+
+.is-invalid {
+    border: 1px solid red !important;
+}
+
+.error-message {
+    color: red !important;
+    margin-bottom: 15px;
+    height: 15px;
+}
+
+.checkout_details_area form {
+    label {
+        font-size: 12px;
+        text-transform: uppercase;
+        font-weight: 600;
+
+        span {
+            color: $bg-default;
+        }
+    }
+
+    .form-control {
+        height: 42px;
+        border: 1px solid $border-color;
+        background-color: transparent;
+        border-radius: 0;
+    }
+
+    #shipping_note {
+        min-height: 5em;
+    }
+
+    .nice-select {
+        border-radius: 0;
+        border: 1px solid $border-color;
+
+        .list {
+            width: 100%;
+            border-radius: 0;
+        }
+    }
+
+}
+
+.order-details-confirmation {
+    width: 100%;
+    border: 2px solid #ebebeb;
+    padding: 40px;
+
+    @media #{$breakpoint-xs} {
+        margin-top: 100px;
+        padding: 20px;
+    }
+
+    .order-details-form li {
+        @include display-flex(flex);
+        @include align-items(center);
+        @include justify-content-between;
+        margin-bottom: 0;
+        font-size: 12px;
+        padding: 20px 0;
+        border-bottom: 2px solid $border-color;
+        font-weight: 500;
+    }
+
+    .coupon-status-message {
+        text-transform: initial;
+        font-weight: initial;
+        margin-top: 5px;
+    }
+
+    .item-product-name {
+        text-transform: none !important;
+    }
+
+    .item-header {
+        font-weight: 600 !important;
+        font-size: 14px !important;
+    }
+
+    .total-header {
+        font-size: 17px !important;
+        font-weight: 600 !important;
+
+        .old-price {
+            text-decoration: line-through;
+            font-weight: 500;
+            color: #9f9f9f;
+        }
+    }
+
+    .card-header h6 a {
+        display: block;
+        font-size: 14px;
+        text-transform: uppercase;
+
+        i {
+            color: #9f9f9f;
+        }
+    }
+
+    .card {
+        border: none;
+    }
+
+    .card-header {
+        background-color: transparent;
+        border-bottom: none;
+    }
+
+    .card-body p {
+        font-size: 12px;
+        line-height: 2;
+        color: #9f9f9f;
+    }
+}

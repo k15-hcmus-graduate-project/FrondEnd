@@ -1,0 +1,303 @@
+@import 'src/assets/scss/theme_color';
+@import 'src/assets/scss/variables';
+@import 'src/assets/scss/mixin';
+@import 'src/assets/scss/responsive';
+
+/* :: 4.0 Header Area CSS */
+
+.nav-brand {
+    width: 70px;
+    margin-right: 10px !important;
+    img {
+        width: 200%;
+    }
+}
+
+.breakpoint-off .classynav ul li .dropdown {
+    width: auto;
+    position: fixed;
+    background-color: #fff;
+    top: 10%;
+    left: 0;
+    z-index: 100;
+    height: auto;
+    box-shadow: 0 1px 5px rgba(0, 0, 0, .1);
+    -webkit-transition-duration: .1s;
+    transition-duration: .1s;
+    opacity: 0;
+    visibility: hidden;
+    padding: 10px 0 15px 0;
+
+    .dropdown-item {
+        padding: 0 20px !important;
+    }
+}
+
+.classy-nav-container a
+
+.menuitem-container {
+    width: 20%;
+}
+
+.menuitem-active {
+    background: #00000015 !important;
+}
+
+.catalog-container {
+    width: 100vw !important;
+    padding-right: 25px !important;
+    border: 1px solid #ebebeb;
+}
+
+.catalog-detail {
+    transition-duration: .1s;
+    width: 100%;
+    right: 0;
+    display: flex;
+    flex-wrap: wrap;
+    
+    .branch-container {
+        margin: 10px 20px;
+
+        .category-item {
+            height: 30px;
+        }
+    }
+
+    a {
+        transition-duration: .2s !important;
+    }
+}
+
+.breakpoint-off .classynav ul li:hover .dropdown {
+    opacity: 1;
+    visibility: visible;
+    top: 85px;
+}
+
+.header_area {
+    position: fixed;
+    z-index: 900;
+    top: 0;
+    left: 0;
+    width: 100%;
+    border-bottom: 1px solid $border-color;
+    @include trans-duration(500ms);
+    // .classy-nav-container {
+    //     @media #{$breakpoint-xs} {
+    //         @include flex-wrap(wrap);
+    //     }
+    //     .classy-navbar-toggler {
+    //         @media #{$breakpoint-xs} {
+    //             margin-left: auto;
+    //             margin-right: 15px;
+    //         }
+    //     }
+    // }
+    // .classy-navbar,
+    // .header-meta {
+    //     @include flex(0 0 50%);
+    //     min-width: 50%;
+    //     width: 50%;
+    //     @media #{$breakpoint-xs} {
+    //         @include flex(0 0 100%);
+    //         min-width: 100%;
+    //         width: 100%;
+    //     }
+    // }
+    // .classy-navbar {
+    //     height: 85px;
+    //     padding: 5px 0 5px 5%;
+    //     @media #{$breakpoint-xs} {
+    //         height: 40px;
+    //         border-bottom: 1px solid $border-color;
+    //     }
+    // }
+    // .header-meta {
+    //     height: 85px;
+    //     position: relative;
+    //     z-index: 1;
+    //     @media #{$breakpoint-xs} {
+    //         height: 40px;
+    //     }
+    // }
+
+    #menuitem-catalog {
+        ul {
+            position: relative;
+        }
+    }
+
+    .classynav ul li {
+        position: relative !important;
+    }
+
+    .classynav ul li a {
+        font-size: 16px;
+        color: $text-color;
+        &:hover {
+            color: $dark-color;
+        }
+    }
+    .classynav ul li .megamenu li a,
+    .classynav ul li .dropdown li a {
+        font-size: 14px;
+        color: $text-color;
+        &:hover {
+            color: $dark-color;
+        }
+    }
+    .header-meta {
+        z-index: 10;
+    }
+
+    .search-area {
+        form {
+            position: relative;
+            z-index: 1;
+            height: 85px;
+            border-left: 1px solid $border-color;
+            @media #{$breakpoint-xs} {
+                height: 40px;
+                border-left: none;
+            }
+            input {
+                border: none;
+                background-color: $white-color;
+                width: 200px;
+                height: 85px;
+                padding: 0 15px 0 60px;
+                color: $text-color;
+                font-size: 14px;
+                font-weight: 500;
+                @include trans-duration(500ms);
+                @media #{$breakpoint-xs} {
+                    width: 170px;
+                    height: 40px;
+                    padding: 0 10px 0 30px;
+                }
+                &:focus {
+                    outline: none !important;
+                    width: 350px;
+                    @media #{$breakpoint-md} {
+                        width: 300px;
+                    }
+                    @media #{$breakpoint-xs} {
+                        width: 170px;
+                    }
+                    @media #{$breakpoint-xs-landscape} {
+                        width: 270px;
+                    }
+                    @media #{$breakpoint-sm} {
+                        width: 300px;
+                    }
+                }
+            }
+            button {
+                position: absolute;
+                z-index: 10;
+                top: 50%;
+                @include transform(translateY(-50%));
+                left: 30px;
+                background-color: transparent;
+                border: none;
+                color: $text-color;
+                font-size: 14px;
+                @media #{$breakpoint-xs} {
+                    left: 10px;
+                    height: 40px;
+                }
+            }
+        }
+    }
+    .user-login-info {
+        border-left: 1px solid $border-color;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 1%;
+
+        .btn {
+            margin: 0 5px;
+            display: inline-block;
+        }
+
+        .dropdown-item {
+            margin: 0 !important;
+            line-height: initial;
+            width: 100%;
+        }
+
+        .dropdown-menu.show {
+            position: absolute !important;
+            transform: none !important;
+            right: 0;
+            left: auto !important;
+            top: 85px !important;
+        }
+    } 
+
+    .user-login-button {
+        @media only screen and (max-width: 767px) {
+
+            a {
+                line-height: initial;
+            }
+        }
+    }
+
+    .loggedin-btn {
+        border: none !important;
+    }
+
+    .favourite-area,
+    .user-login-info,
+    .cart-area {
+        :hover {
+            cursor: pointer;
+        }
+
+        #essenceCartBtn {
+            position: relative;
+            z-index: 1;
+            @include flex(0 0 90px);
+            width: 90px;
+            display: block;
+            text-align: center;
+            border-left: 1px solid $border-color;
+            height: 100%;
+            line-height: 80px;
+            @media #{$breakpoint-xs} {
+                @include flex(0 0 50px);
+                width: 50px;
+                line-height: 40px;
+            }
+            img {
+                max-width: 20px;
+            }
+            span {
+                font-family: $font-ubuntu;
+                font-size: 18px;
+                color: $bg-default;
+                font-weight: 700;
+                position: absolute;
+                top: -10px;
+                @media #{$breakpoint-xs} {
+                    font-size: 14px;
+                }
+            }
+        }
+    }
+    &.sticky {
+        position: fixed;
+        z-index: 900;
+        top: 0;
+        left: 0;
+        width: 100%;
+        box-shadow: 0 5px 30px rgba(0, 0, 0, 0.15);
+    }
+}
+
+.alert {
+    margin-bottom: 0px;
+}
