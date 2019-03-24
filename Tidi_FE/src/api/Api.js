@@ -78,11 +78,11 @@ class Api {
     }
 
     static get(path: string) {
-        const token = StorageService.getToken();
+        const token = localStorage.getItem("authToken");
         const config = {
             headers: {
                 "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`
+                "x-access-token": token
             },
             timeout: 10000
         };
@@ -134,7 +134,25 @@ class Api {
                 throw error;
             });
     }
+    static getFreshToken(path: string) {
+        const token = localStorage.getItem("refreshToken");
+        const config = {
+            headers: {
+                "Content-Type": "application/json",
+                "x-refresh-token": token
+            }
+        };
 
+        return axios
+            .get(`${path}`, config)
+            .then(res => {
+                if (res.data) return res.data;
+                return res;
+            })
+            .catch(error => {
+                throw error;
+            });
+    }
     static putWithParams(path: string, paramsData: Object) {
         const config = {
             headers: {

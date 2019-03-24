@@ -2,11 +2,10 @@
 // External Dependencies
 import React, { Component } from "react";
 import { Link, Redirect } from "react-router-dom";
-import { Input, Label } from "reactstrap";
+import { Input, Label, Alert } from "reactstrap";
 import * as Yup from "yup";
 import { Formik, ErrorMessage } from "formik";
 import Moment from "moment";
-// Internal Dependencies
 import { ROUTE_NAME } from "../../../routes/main.routing";
 import AuthService from "../../../services/AuthService";
 import WebService from "../../../services/WebService";
@@ -63,25 +62,47 @@ class Register extends Component<State> {
                     <div className="wrap-login100">
                         <div className="login100-pic js-tilt" data-tilt>
                             <img src="/img/img-01.png" alt="IMG" />
-                        </div>
+                        </div>{" "}
                         <Formik
                             initialValues={initValues}
                             validationSchema={SignupSchema}
                             onSubmit={(values, actions) => {
-                                console.log(
-                                    Moment(values.dob)
-                                        .format(CONSTANT.DATE_FORMAT)
-                                        .toString()
-                                );
                                 const { username, password, email, name, dob, phone, gender, address, avatar } = values;
                                 setTimeout(() => {
-                                    // WebService.register(username, password, email, name, dob, phone, gender, address, avatar);
-                                    this.props.register(username, password, email, name, dob, phone, gender, address, avatar);
+                                    WebService.register(
+                                        username,
+                                        password,
+                                        email,
+                                        name,
+                                        Moment(dob)
+                                            .format(CONSTANT.DATE_FORMAT)
+                                            .toString(),
+                                        phone,
+                                        gender,
+                                        address,
+                                        avatar
+                                    ).then(res => {
+                                        let resObj = JSON.parse(res);
+                                        console.log(resObj);
+                                        if (resObj.status === "TRUE") {
+                                            AuthService.saveToken(resObj.token);
+                                            AuthService.saveRefreshToken(resObj.refreshToken);
+                                            console.log("da luu 2 token");
+                                            this.setState({
+                                                redirectTo: <Redirect to={ROUTE_NAME.HOME} />
+                                            });
+                                        } else {
+                                            this.setState({
+                                                message: resObj.msg
+                                            });
+                                        }
+                                    });
                                     actions.setSubmitting(false);
                                 }, 1000);
                             }}
                             render={props => (
                                 <form className="login100-form" onSubmit={props.handleSubmit}>
+                                    {this.state.message !== "" && <Alert color="danger">{this.state.message}</Alert>}
                                     <Label className="login100-form-title">Member Registration</Label>
                                     {/* Username */}
                                     <div className="wrap-input100 validate-input">
@@ -105,7 +126,6 @@ class Register extends Component<State> {
                                             )}
                                         </ErrorMessage>
                                     </div>
-
                                     {/* Password */}
                                     <div className="wrap-input100 validate-input">
                                         <Input
@@ -199,7 +219,6 @@ class Register extends Component<State> {
                                             )}
                                         </ErrorMessage>
                                     </div>
-
                                     {/* DOB */}
                                     <div className="wrap-input100 validate-input" data-validate="Password is required">
                                         <Input
@@ -222,7 +241,6 @@ class Register extends Component<State> {
                                             )}
                                         </ErrorMessage>
                                     </div>
-
                                     <div className="container-login100-form-btn">
                                         <button
                                             disabled={props.values.password !== props.values.passwordConf}
@@ -232,14 +250,12 @@ class Register extends Component<State> {
                                             Register
                                         </button>
                                     </div>
-
                                     <div className="text-center p-t-12">
                                         <span className="txt1">Forgot </span>
                                         <Link to={ROUTE_NAME.RESET_PASSWORD} className="txt2">
                                             Username / Password?
                                         </Link>
                                     </div>
-
                                     <div className="text-center p-t-136">
                                         <span className="txt1">Already have an account? </span>
                                         <Link to={ROUTE_NAME.LOGIN} className="txt2">

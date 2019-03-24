@@ -1,60 +1,52 @@
 // StyleSheets
-import './ProductDetail.scss';
-
-// External Dependencies
-import React from 'react';
-import PropTypes from 'prop-types';
-import { FacebookProvider, Comments } from 'react-facebook';
-
-// Internal Dependencies
-import WebService from '../../../services/WebService';
-import AuthService from '../../../services/AuthService';
-import { showAlert } from '../../../helpers/lib';
-import { withCommas } from '../../../helpers/lib';
-
-import Loader from '../../common/Loader/Loader';
+import React, { Component } from "react";
+import PropTypes from "prop-types";
+import { FacebookProvider, Comments } from "react-facebook";
+import "./ProductDetail.scss";
+import WebService from "../../../services/WebService";
+import AuthService from "../../../services/AuthService";
+import { showAlert } from "../../../helpers/lib";
+import { withCommas } from "../../../helpers/lib";
+import Loader from "../../common/Loader/Loader";
 
 const INTITIAL_STATE = {
     product: {},
     productFound: false
-}
+};
 
-class ProductDetail extends React.Component {
+class ProductDetail extends Component {
     static propTypes = {
         isLoggedIn: PropTypes.bool,
         updateCartProducts: PropTypes.func,
         cart: PropTypes.shape({
             products: PropTypes.array
         })
-    }
+    };
 
     constructor(props) {
         super(props);
-
         this.state = INTITIAL_STATE;
-
-        this.fetchCartProducts = this.fetchCartProducts.bind(this);
-        this.handleAddProductToCart = this.handleAddProductToCart.bind(this);
     }
 
-    componentWillMount() {
+    componentWillMount = () => {
         this.fetchProduct();
-    }
+    };
 
-    componentWillUpdate(nextProps) {
+    componentWillUpdate = nextProps => {
         if (nextProps.match.params.id !== this.props.match.params.id) {
             this.fetchProduct();
         }
-    }
+    };
 
-    fetchProduct() {
+    fetchProduct = () => {
         const productId = Number(this.props.match.params.id);
         if (!isNaN(productId) && productId > 0) {
             WebService.getProduct(productId).then(res => {
-                // MockAPI.Product.getOne(productId).then((res) => {
                 const product = JSON.parse(res);
+                console.log(product);
                 if (product.status !== 500) {
                     product.images = JSON.parse(product.images);
+                    console.log(product.images);
                     this.setState({
                         product,
                         productFound: true
@@ -64,52 +56,56 @@ class ProductDetail extends React.Component {
                 }
             });
         }
-    }
+    };
 
-    fetchCartProducts() {
-        if (this.props.isLoggedIn) {
+    fetchCartProducts = () => {
+        const { isLoggedIn } = this.props;
+        console.log(isLoggedIn);
+        if (isLoggedIn) {
             WebService.getCart(AuthService.getTokenUnsafe()).then(res => {
-                // MockAPI.CART.getCart().then(res => {
+                console.log(res);
                 const result = JSON.parse(res);
-
-                if (result.status.status === 'TRUE') {
+                console.log(result);
+                if (result.status.status === "TRUE") {
                     if (result.products) {
-                        result.products.forEach(prd => prd.images = JSON.parse(prd.images));
+                        result.products.forEach(prd => (prd.images = JSON.parse(prd.images)));
                     }
                     this.props.updateCartProducts(result.products);
                 }
             });
         }
-    }
+    };
 
-    handleAddProductToCart(product) {
-        if (this.props.isLoggedIn) {
-            const currentCartItems = this.props.cart.products;
+    handleAddProductToCart = (product: any) => {
+        const { isLoggedIn, cart } = this.props;
+        if (isLoggedIn) {
+            const currentCartItems = cart.products;
             if (product.id) {
                 let cartItemAmount = 0;
-                for (let cartItem in currentCartItems) {
-                    if (cartItem.id === product.id) {
-                        cartItemAmount = cartItem.amount;
-                    }
-                }
-
-                WebService.addItemToCart(AuthService.getTokenUnsafe(), product.id, cartItemAmount + 1)
-                    .then(r => {
-                        const res = JSON.parse(r);
-                        if (res.status) {
-                            showAlert(`Added ${product.productName} to Cart!`);
-                            this.fetchCartProducts();
+                if (currentCartItems)
+                    currentCartItems.map(cartItem => {
+                        if (cartItem.id === product.id) {
+                            console.log(cartItem);
+                            cartItemAmount = cartItem.amount;
                         }
-                    })
+                    });
+                cartItemAmount += 1;
+                WebService.addItemToCart(AuthService.getTokenUnsafe(), product.id, cartItemAmount).then(r => {
+                    console.log(r);
+                    const res = JSON.parse(r);
+                    if (res.status) {
+                        showAlert(`Added ${product.productName} to Cart!`);
+                        this.fetchCartProducts();
+                    }
+                });
             }
         } else {
-            showAlert('You have not logged in yet', 'error');
+            showAlert("You have not logged in yet", "error");
         }
-    }
+    };
 
-    generatePictures() {
+    generatePictures = () => {
         let r = [];
-
         if (this.state.product.images) {
             this.state.product.images.forEach((imageURL, index) => {
                 r.push(
@@ -121,112 +117,94 @@ class ProductDetail extends React.Component {
         }
 
         return r;
-    }
+    };
 
-
-    render() {
+    render = () => {
         if (!this.state.productFound) {
-            return <div className="d-flex justify-content-center p-5">Product not found</div>
+            return <div className="d-flex justify-content-center p-5">Product not found</div>;
         } else if (Object.keys(this.state.product).length === 0) {
-            return <Loader />
-        }
-        else {
-            const product = this.state.product;
+            return <Loader />;
+        } else {
+            const { product } = this.state;
             const discountedPercent = Math.round(product.discPercent * 100);
             const discountedPrice = Math.round(product.price - product.price * product.discPercent);
             const listdescription = product.description.split("\n");
             const listDescription = [];
             for (var j = 0; j < listdescription.length; j++) {
-                listDescription[j] = <p key={j} className="product-desc">{listdescription[j]}</p>
+                listDescription[j] = (
+                    <p key={j} className="product-desc">
+                        {listdescription[j]}
+                    </p>
+                );
             }
+            console.log(listDescription);
             return (
                 <div className="single_product_details_area d-flex align-items-center">
                     <div id="images-slider" className="single_product_thumb carousel slide" data-ride="carousel">
-                        <div className="carousel-inner">
-                            {this.generatePictures()}
-                        </div>
+                        <div className="carousel-inner">{this.generatePictures()}</div>
                         <a className="carousel-control-prev owl-prev" href="#images-slider" role="button" data-slide="prev">
-                            <span className="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span className="fa fa-chevron-circle-left fa-5x" aria-hidden="false" />
                             <span className="sr-only">Previous</span>
                         </a>
                         <a className="carousel-control-next owl-next" href="#images-slider" role="button" data-slide="next">
-                            <span className="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span className="fa fa-chevron-circle-right fa-5x" aria-hidden="false" />
                             <span className="sr-only">Next</span>
                         </a>
                     </div>
 
                     {/* <!-- Single Product Description --> */}
                     <div className="single_product_desc clearfix">
-                        <span>{product.brand && product.brand.brandName}</span>
+                        <span>{product.brand && product.brand[0].brand_name}</span>
                         <a href="cart.html">
-                            <h2>{product.productName}</h2>
+                            <h2>{product.product_name}</h2>
                         </a>
                         <p className="product-price">
-                            {
-                                product.discPercent !== 0 &&
-                                <span className="old-price">{withCommas(product.price) + ' ₫'}</span>
-                            }
-                            {withCommas(discountedPrice) + ' ₫  '}
-                            {
-                                discountedPercent ?
-                                    '(-' + discountedPercent + '%)'
-                                    : null
-                            }
+                            {product.discPercent !== 0 && <span className="old-price">{withCommas(product.price) + " ₫"}</span>}
+                            {withCommas(discountedPrice) + " ₫  "}
+                            {discountedPercent ? "(-" + discountedPercent + "%)" : null}
                         </p>
-                        {listDescription}
+                        <h4>{listDescription}</h4>
                         {/* <!-- Form --> */}
                         <form className="cart-form clearfix" method="post">
-                            {/* <!-- Select Box --> */}
-                            {/* <div className="form-group select-box d-flex mt-50 mb-30">
-                                <select name="select" id="productSize" className="mr-3 form-control">
-                                    <option value="value">Size: XL</option>
-                                    <option value="value">Size: X</option>
-                                    <option value="value">Size: M</option>
-                                    <option value="value">Size: S</option>
-                                </select>
-                                <select name="select" id="productColor" className="form-control">
-                                    <option value="value">Color: Black</option>
-                                    <option value="value">Color: White</option>
-                                    <option value="value">Color: Red</option>
-                                    <option value="value">Color: Purple</option>
-                                </select>
-                            </div> */}
                             {/* <!-- Cart & Favourite Box --> */}
                             <div className="cart-fav-box d-flex align-items-center">
                                 {/* <!-- Cart --> */}
-                                <button type="button" name="addtocart" className="btn essence-btn"
+                                <button
+                                    type="button"
+                                    name="addtocart"
+                                    className="btn essence-btn"
                                     onClick={() => this.handleAddProductToCart(product)}
-                                >Add to cart</button>
+                                >
+                                    Add to cart
+                                </button>
                                 {/* <!-- Favourite --> */}
                                 <div className="product-favourite ml-4">
-                                    <a href="#/" className="favme fa fa-heart" ><span></span></a>
+                                    <a href="#/" className="favme fa fa-heart">
+                                        <span />
+                                    </a>
                                 </div>
                             </div>
 
                             <div className="cart-fav-box d-flex align-items-center justify-content-end">
-                                <a href="/">{product.category && product.category.categoryName}</a>
+                                <a href="/">{product.category && product.category[0].category_name}</a>
                             </div>
                         </form>
                     </div>
 
                     {/* PRODUCT FULL DESCRIPTION */}
                     <div className="full-description-container">
-                        <div className="container">
-                            {product.description}
-                        </div>
+                        <div className="container">{product.description}</div>
                     </div>
 
                     <div className="fb-comment-plugin-container">
                         <FacebookProvider appId="486326855227569">
-                            <Comments
-                                href={'https://tidi-binpossible49.c9users.io' + this.props.location.pathname} className="kdjf" />
+                            <Comments href={"https://tidi-binpossible49.c9users.io" + this.props.location.pathname} className="kdjf" />
                         </FacebookProvider>
                     </div>
-
                 </div>
             );
         }
-    }
+    };
 }
 
 export default ProductDetail;

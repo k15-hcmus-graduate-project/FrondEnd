@@ -1,7 +1,5 @@
 // External Dependencies
 import { connect } from "react-redux";
-
-// Internal Dependencies
 import Actions from "../duck/actions";
 import Cart from "./Cart";
 
@@ -13,6 +11,13 @@ const mapDispatchToProps = dispatch => ({
 
     updateCartProducts: products => {
         dispatch(Actions.updateCartProduct(products));
+    },
+    changeLoginStatus: status => {
+        dispatch(
+            Actions.updateAuthStatus({
+                isLoggedIn: status
+            })
+        );
     }
 });
 

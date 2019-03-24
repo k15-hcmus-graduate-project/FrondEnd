@@ -15,14 +15,6 @@ export const QUERY_PARAMS = {
     maxPrice: "pto"
 };
 
-export const keyword = "q";
-export const industryId = "ind";
-export const branchId = "brch";
-export const categoryId = "cat";
-export const brandId = "brd";
-export const minPrice = "pfrom";
-export const maxPrice = "pto";
-
 export const ACTIVE_TYPE = {
     TRUE: "TRUE",
     FALSE: "FALSE"
@@ -98,12 +90,12 @@ export const DEFAULT_FORMDATA = {
 };
 
 export const PAYMENT_METHOD = [
-    {
-        ID: 0,
-        NAME: "ZaloPay",
-        DESCRIPTION: "FREE and PROFESSIONL payment method",
-        SHIPPING_FEE: 0
-    },
+    // {
+    //     ID: 0,
+    //     NAME: "ZaloPay",
+    //     DESCRIPTION: "FREE and PROFESSIONL payment method",
+    //     SHIPPING_FEE: 0
+    // },
     {
         ID: 1,
         NAME: "Ship COD",

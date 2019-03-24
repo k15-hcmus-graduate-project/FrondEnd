@@ -1,7 +1,8 @@
 // @flow
 import React from "react";
 import _ from "lodash";
-import { Link, Redirect } from "react-router-dom";
+import { Formik } from "formik";
+import { Link, Redirect, withRouter } from "react-router-dom";
 import PropTypes from "prop-types";
 import "./Header.scss";
 import { ROUTE_NAME } from "../../../routes/main.routing";
@@ -40,8 +41,6 @@ class Header extends React.Component {
     constructor(props: any) {
         super(props);
         this.state = INITIAL_STATE;
-        this.generateMenuItems = this.generateMenuItems.bind(this);
-        this.generateCatalog = this.generateCatalog.bind(this);
     }
 
     componentDidMount = () => {
@@ -53,6 +52,7 @@ class Header extends React.Component {
         // Authentication verifying procedure
         // ============ START
         AuthService.isLoggedIn().then(status => {
+            console.log(status);
             if (status.tokenIsValid) {
                 this.props.changeLoginStatus(status.tokenIsValid);
 
@@ -77,11 +77,11 @@ class Header extends React.Component {
         }
     };
 
-    componentWillReceiveProps(newProps, oldProps) {
+    componentWillReceiveProps = (newProps, oldProps) => {
         if (newProps.emailIsVerified !== oldProps.emailIsVerified && newProps.emailIsVerified === ACTIVE_TYPE.TRUE) {
             this.props.toggleNotification("", "");
         }
-    }
+    };
 
     fetchIndustries = () => {
         WebService.getAllIndustries().then(idtrs => {
@@ -174,6 +174,7 @@ class Header extends React.Component {
     };
 
     render() {
+        console.log(this.props.nCartItems);
         return (
             <header className="header_area">
                 {this.state.redirectTo}
@@ -252,12 +253,29 @@ class Header extends React.Component {
                     <div className="header-meta d-flex clearfix justify-content-end">
                         {/* <!-- Search Area --> */}
                         <div className="search-area">
-                            <form action={ROUTE_NAME.PRODUCTS} method="GET">
-                                <input type="search" name={QUERY_PARAMS.keyword} id="headerSearch" placeholder="Type for search" />
-                                <button type="submit">
-                                    <i className="fa fa-search" aria-hidden="true" />
-                                </button>
-                            </form>
+                            <Formik
+                                initialValues={{ keyword: "" }}
+                                onSubmit={(values, actions) => {
+                                    setTimeout(() => {
+                                        this.props.history.push(ROUTE_NAME.PRODUCTS + `?${QUERY_PARAMS.keyword}=${values.keyword}`);
+                                        actions.setSubmitting(false);
+                                    }, 600);
+                                }}
+                                render={props => (
+                                    <form onSubmit={props.handleSubmit}>
+                                        <input
+                                            type="search"
+                                            value={props.values.keyword}
+                                            onChange={props.handleChange}
+                                            name="keyword"
+                                            placeholder="Type for search"
+                                        />
+                                        <button type="submit">
+                                            <i className="fa fa-search" aria-hidden="true" />
+                                        </button>
+                                    </form>
+                                )}
+                            />
                         </div>
                         {/* <!-- Cart Area --> */}
                         <div className="cart-area">
@@ -325,4 +343,4 @@ class Header extends React.Component {
     }
 }
 
-export default Header;
+export default withRouter(Header);

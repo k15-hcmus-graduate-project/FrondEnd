@@ -37,13 +37,10 @@ class Products extends Component {
         this.handleAddProductToCart = this.handleAddProductToCart.bind(this);
     }
 
-    componentWillMount = () => {
-        this.resetParamsURL();
-    };
     componentDidMount = () => {
-        const params = new URLSearchParams(this.props.history.location.search);
-        const pageIndex = Number(params.get("page"));
-        const pageSize = Number(params.get("size"));
+        const params = qs.parse(this.props.history.location.search);
+        const pageIndex = Number(params.page);
+        const pageSize = Number(params.size);
         this.retrieveURLParams(params, true);
         if (pageIndex && pageSize && [12, 24, 36].indexOf(pageSize) !== -1) {
             this.handleFilterChange({
@@ -61,9 +58,7 @@ class Products extends Component {
     };
 
     componentWillReceiveProps = newProps => {
-        // this.resetParamsURL();
         const params = qs.parse(newProps.history.location.search);
-        // console.log(newProps.history.location.search);
         this.retrieveURLParams(params);
     };
 
@@ -195,11 +190,14 @@ class Products extends Component {
     };
 
     fetchCartProducts = () => {
-        if (this.props.isLoggedIn) {
+        const { isLoggedIn } = this.props;
+        console.log(isLoggedIn);
+        if (isLoggedIn) {
+            console.log("update thoi nao");
             WebService.getCart(AuthService.getTokenUnsafe()).then(res => {
                 const result = JSON.parse(res);
-
-                if (result.status.status === "TRUE") {
+                console.log(result);
+                if (result.status === true) {
                     if (result.products) {
                         result.products.forEach(prd => (prd.images = JSON.parse(prd.images)));
                     }
@@ -210,17 +208,19 @@ class Products extends Component {
     };
 
     handleAddProductToCart = product => {
-        if (this.props.isLoggedIn) {
-            const currentCartItems = this.props.cart.products;
+        console.log(product);
+        const { isLoggedIn, cart } = this.props;
+        if (isLoggedIn) {
+            const currentCartItems = cart.products;
             if (product.id) {
                 let cartItemAmount = 0;
-                for (let cartItem in currentCartItems) {
+                currentCartItems.map(cartItem => {
                     if (cartItem.id === product.id) {
                         cartItemAmount = cartItem.amount;
                     }
-                }
-
-                WebService.addItemToCart(AuthService.getTokenUnsafe(), product.id, cartItemAmount + 1).then(r => {
+                });
+                cartItemAmount += 1;
+                WebService.addItemToCart(AuthService.getTokenUnsafe(), product.id, cartItemAmount).then(r => {
                     const res = JSON.parse(r);
                     if (res.status) {
                         showAlert(`Added ${product.product_name} to Cart!`);
@@ -261,9 +261,10 @@ class Products extends Component {
 
     generateProducts = () => {
         const { products } = this.props;
+        console.log(products);
         const productsElements = [];
 
-        products.forEach((product, index) => {
+        products.map((product, index) => {
             productsElements.push(
                 <Product
                     // key={product.id}
@@ -383,10 +384,9 @@ class Product extends Component {
         buttonTitle: PropTypes.string
     };
 
-    render() {
-        const { product } = this.props;
+    render = () => {
+        const { product, onClickHandler, buttonTitle } = this.props;
         if (!product) return "";
-        // console.log(product.discPercent);
         const discountedPrice = Math.round(product.price - product.price * product.discPercent);
         // const productImages = JSON.parse(product.images);
         return (
@@ -430,8 +430,8 @@ class Product extends Component {
                         <div className="hover-content">
                             {/* <!-- Add to Cart --> */}
                             <div className="add-to-cart-btn">
-                                <button className="btn essence-btn" onClick={() => this.props.onClickHandler(product)}>
-                                    {this.props.buttonTitle}
+                                <button className="btn essence-btn" onClick={() => onClickHandler(product)}>
+                                    {buttonTitle}
                                 </button>
                             </div>
                         </div>
@@ -439,7 +439,7 @@ class Product extends Component {
                 </div>
             </div>
         );
-    }
+    };
 }
 
 export default withRouter(Products);

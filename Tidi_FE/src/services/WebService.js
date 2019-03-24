@@ -1,9 +1,22 @@
 // External Dependencies
 import Request from "request";
 import Api from "../api/Api";
-// Internal Dependencies
+import jwtDecode from "jwt-decode";
 import COSNTANT from "../config/constants";
-import { API_BASE_URL, API_USERS_ADD, API_PRODUCT_INDUSTRY, API_PRODUCT_BRAND, API_PRODUCT_ALL } from "../config/AppConfig";
+import {
+    API_BASE_URL,
+    API_USERS_ADD,
+    API_PRODUCT_INDUSTRY,
+    API_PRODUCT_BRAND,
+    API_PRODUCT_ALL,
+    API_USERS_CART,
+    API_USERS_LOGIN,
+    API_USERS_CART_UPDATE,
+    API_USERS_ONE,
+    API_CHECKOUT_COUPONSTT,
+    API_CHECKOUT
+} from "../config/AppConfig";
+
 const apiPrefix = {
     authentication: "/auth",
     account: "/account",
@@ -17,7 +30,8 @@ const apiPrefix = {
 const fetch = ({ method, reqBody, route, jwtToken }) => {
     return new Promise((resolve, reject) => {
         const HttpHeader = {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "x-access-token": jwtToken
         };
 
         if (jwtToken) {
@@ -28,8 +42,8 @@ const fetch = ({ method, reqBody, route, jwtToken }) => {
             {
                 method,
                 uri: COSNTANT.REST_SERVER + route,
-                qs: reqBody && (method === "POST" ? reqBody : undefined),
-                body: reqBody && (method === "POST" ? JSON.stringify(reqBody) : undefined),
+                qs: reqBody && (method === "POST" || method === "PUT" ? reqBody : undefined),
+                body: reqBody && (method === "POST" || method === "PUT" ? JSON.stringify(reqBody) : undefined),
                 headers: HttpHeader
             },
             (err, res, body) => {
@@ -57,21 +71,28 @@ export default {
                 username,
                 password
             },
-            route: apiPrefix.authentication + "/login"
+            route: API_USERS_LOGIN
         });
     },
 
     // 1.2 Registration
     register: (username, password, email, fullName, dateOfBirth, phone, gender, address, avatar) => {
-        Api.post(`${API_BASE_URL}${API_USERS_ADD}`, { username, password, email, fullName, dateOfBirth, phone, gender, address, avatar })
-            .then(res => {
-                console.log(res);
-            })
-            .catch(err => {
-                console.log(err);
-            });
+        return fetch({
+            method: "POST",
+            reqBody: {
+                username,
+                password,
+                email,
+                fullName,
+                dateOfBirth,
+                phone,
+                gender,
+                address,
+                avatar
+            },
+            route: API_USERS_ADD
+        });
     },
-
     // 1.3 Registration email verification
     verifyEmail: verificationCode => {
         return fetch({
@@ -119,11 +140,19 @@ export default {
 
     // 2.1 READ Account information
     readAccountInfo: token => {
-        return fetch({
-            method: "POST",
-            jwtToken: token,
-            route: apiPrefix.account + "/info"
-        });
+        if (token) {
+            const { username } = jwtDecode(token).user;
+            return fetch({
+                method: "GET",
+                jwtToken: token,
+                route: API_USERS_ONE + `/${username}`
+            });
+        } else
+            return fetch({
+                method: "GET",
+                jwtToken: token,
+                route: API_USERS_ONE
+            });
     },
 
     // 2.2 UPDATE Account information
@@ -213,37 +242,64 @@ export default {
 
     // 4.1 Get all items in cart
     getCart: token => {
-        return fetch({
-            method: "GET",
-            jwtToken: token,
-            route: apiPrefix.cart + "/all"
-        });
+        if (token) {
+            const { username } = jwtDecode(token).user;
+            console.log(username);
+            return fetch({
+                method: "GET",
+                jwtToken: token,
+                route: API_USERS_CART + `?username=${username}`
+            });
+        } else
+            return fetch({
+                method: "GET",
+                jwtToken: token,
+                route: API_USERS_CART
+            });
     },
 
     // 4.2 Insert item
     addItemToCart: (token, productId, amount) => {
-        return fetch({
-            method: "POST",
-            reqBody: {
-                productId,
-                amount
-            },
-            jwtToken: token,
-            route: apiPrefix.cart + "/insert"
-        });
+        if (!token || !productId || !amount) return null;
+        if (token) {
+            const { username } = jwtDecode(token).user;
+            return fetch({
+                method: "POST",
+                reqBody: {
+                    username,
+                    productId,
+                    amount
+                },
+                jwtToken: token,
+                route: API_USERS_CART
+            });
+        } else
+            return fetch({
+                method: "POST",
+                reqBody: {
+                    productId,
+                    amount
+                },
+                jwtToken: token,
+                route: API_USERS_CART
+            });
     },
 
     // 4.3 Update item
     updateItemInCart: (token, productId, amount) => {
-        return fetch({
-            method: "POST",
-            reqBody: {
-                productId,
-                amount
-            },
-            jwtToken: token,
-            route: apiPrefix.cart + "/update"
-        });
+        if (token) {
+            const { username } = jwtDecode(token).user;
+            return fetch({
+                method: "PUT",
+                reqBody: {
+                    username,
+                    productId,
+                    amount
+                },
+                jwtToken: token,
+                route: API_USERS_CART
+            });
+        } else return null;
     },
 
     // 4.4 Delete item
@@ -263,21 +319,28 @@ export default {
      */
 
     // 5.1 Checkout (Cart to Order)
-    toCheckout: (token, couponCode, fullName, phone, email, address, note, shippingMethod) => {
-        return fetch({
-            method: "POST",
-            reqBody: {
-                couponCode,
-                fullName,
-                phone,
-                email,
-                address,
-                note,
-                shippingMethod
-            },
-            jwtToken: token,
-            route: apiPrefix.checkout + "/checkout"
-        });
+    toCheckout: (token, couponCode, fullName, phone, email, address, note, shippingMethod, total, finalTotal, cartItems) => {
+        if (token) {
+            const { username } = jwtDecode(token).user;
+            return fetch({
+                method: "POST",
+                reqBody: {
+                    username,
+                    couponCode,
+                    fullName,
+                    phone,
+                    email,
+                    address,
+                    note,
+                    shippingMethod,
+                    total,
+                    finalTotal,
+                    cartItems
+                },
+                jwtToken: token,
+                route: API_CHECKOUT
+            });
+        } else return null;
     },
 
     // 5.2 Get all orders
@@ -313,7 +376,8 @@ export default {
             reqBody: {
                 coupon
             },
-            route: apiPrefix.checkout + "/couponStatus"
+            jwtToken: localStorage.getItem("authToken"),
+            route: API_CHECKOUT_COUPONSTT
         });
     },
 

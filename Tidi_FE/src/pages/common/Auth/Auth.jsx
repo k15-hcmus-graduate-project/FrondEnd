@@ -1,10 +1,8 @@
-// @flow
 // Stylesheets
-import "./Auth.scss";
 import React from "react";
 import { Redirect } from "react-router-dom";
 import PropTypes from "prop-types";
-// Internal Dependencies
+import "./Auth.scss";
 import { ROUTE_NAME } from "../../../routes/main.routing";
 import Login from "./Login";
 import Register from "./Register";
@@ -18,7 +16,6 @@ class Auth extends React.Component {
     };
 
     render() {
-        const { register } = this.props;
         if (this.props.isLoggedIn) {
             return <Redirect to={ROUTE_NAME.HOME} />;
         }
@@ -26,7 +23,7 @@ class Auth extends React.Component {
         if (this.props.resetForm) {
             return <ResetPassword {...this.props} />;
         }
-        return this.props.loginForm ? <Login {...this.props} /> : <Register {...this.props} register={register} />;
+        return this.props.loginForm ? <Login {...this.props} /> : <Register {...this.props} />;
     }
 }
 
