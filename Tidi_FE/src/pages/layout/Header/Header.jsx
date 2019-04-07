@@ -1,5 +1,5 @@
 // @flow
-import React from "react";
+import React, { Component } from "react";
 import _ from "lodash";
 import { Formik } from "formik";
 import { Link, Redirect, withRouter } from "react-router-dom";
@@ -25,7 +25,7 @@ const INTERNAL_CONFIG = {
     emailNotificationFailure: "Verification code is invalid, please try again later"
 };
 
-class Header extends React.Component {
+class Header extends Component {
     static propTypes = {
         fetchIndustries: PropTypes.func,
         changeIndustryHover: PropTypes.func,
@@ -44,34 +44,27 @@ class Header extends React.Component {
     }
 
     componentDidMount = () => {
-        const params = new URLSearchParams(this.props.history.location.search);
+        const { changeLoginStatus, history, toggleNotification } = this.props;
+        const params = new URLSearchParams(history.location.search);
         const emailVerificationCode = params.get("email");
 
         this.fetchIndustries();
-        // FIXME: retrieve isLoggedIn from RouteWithSubRoutes and delete this block
-        // Authentication verifying procedure
-        // ============ START
         AuthService.isLoggedIn().then(status => {
-            console.log(status);
             if (status.tokenIsValid) {
-                this.props.changeLoginStatus(status.tokenIsValid);
+                changeLoginStatus(status.tokenIsValid);
 
                 if (status.emailIsVerified === ACTIVE_TYPE.FALSE && !emailVerificationCode) {
-                    this.props.toggleNotification(INTERNAL_CONFIG.emailNotification, "alert-warning");
+                    toggleNotification(INTERNAL_CONFIG.emailNotification, "alert-warning");
                 }
             }
         });
-        // ============ END
-
-        // Get email verification code from URL
         if (emailVerificationCode) {
             WebService.verifyEmail(emailVerificationCode).then(res => {
                 const result = JSON.parse(res);
-
                 if (result.status === ACTIVE_TYPE.TRUE) {
-                    this.props.toggleNotification(INTERNAL_CONFIG.emailNotificationSuccess, "alert-success");
+                    toggleNotification(INTERNAL_CONFIG.emailNotificationSuccess, "alert-success");
                 } else {
-                    this.props.toggleNotification(INTERNAL_CONFIG.emailNotificationFailure, "alert-danger");
+                    toggleNotification(INTERNAL_CONFIG.emailNotificationFailure, "alert-danger");
                 }
             });
         }
@@ -173,11 +166,12 @@ class Header extends React.Component {
         return R;
     };
 
-    render() {
-        console.log(this.props.nCartItems);
+    render = () => {
+        const { history, nCartItems, isLoggedIn, username, notificationMessage, notificationType } = this.props;
+        const { redirectTo, openMenuMobile } = this.state;
         return (
             <header className="header_area">
-                {this.state.redirectTo}
+                {redirectTo}
                 <div className="classy-nav-container breakpoint-off d-flex align-items-center justify-content-between">
                     {/* <!-- Classy Menu --> */}
                     <nav className="classy-navbar" id="essenceNav">
@@ -199,7 +193,7 @@ class Header extends React.Component {
                             </span>
                         </div>
                         {/* <!-- Menu --> */}
-                        <div className={"classy-menu " + (this.state.openMenuMobile ? "menu-on" : "")}>
+                        <div className={"classy-menu " + (openMenuMobile ? "menu-on" : "")}>
                             {/* <!-- close btn --> */}
                             <div
                                 className="classycloseIcon"
@@ -257,7 +251,7 @@ class Header extends React.Component {
                                 initialValues={{ keyword: "" }}
                                 onSubmit={(values, actions) => {
                                     setTimeout(() => {
-                                        this.props.history.push(ROUTE_NAME.PRODUCTS + `?${QUERY_PARAMS.keyword}=${values.keyword}`);
+                                        history.push(ROUTE_NAME.PRODUCTS + `?${QUERY_PARAMS.keyword}=${values.keyword}`);
                                         actions.setSubmitting(false);
                                     }, 600);
                                 }}
@@ -285,11 +279,11 @@ class Header extends React.Component {
                                     this.props.toggleCart(true);
                                 }}
                             >
-                                <img src="/img/core-img/bag.svg" alt="" /> <span>{this.props.nCartItems}</span>
+                                <img src="/img/core-img/bag.svg" alt="" /> <span>{nCartItems}</span>
                             </div>
                         </div>
                         {/* <!-- Favourite Area --> */}
-                        {this.props.isLoggedIn ? (
+                        {isLoggedIn ? (
                             <div className="favourite-area">
                                 <a href="/">
                                     <img src="/img/core-img/message.svg" alt="" />
@@ -298,13 +292,13 @@ class Header extends React.Component {
                         ) : null}
                         {/* <!-- User Login Info --> */}
                         <div className="user-login-info d-flex justify-content-center align-items-center">
-                            {this.props.isLoggedIn ? (
+                            {isLoggedIn ? (
                                 <div className="favourite-area">
                                     <a href="/" className="dropdown dropdown-toggle loggedin-btn" data-toggle="dropdown">
                                         <img src="/img/core-img/user.svg" alt="" />
                                     </a>
                                     <div className="dropdown-menu">
-                                        <span className="d-flex justify-content-center">Hello, {this.props.username}</span>
+                                        <span className="d-flex justify-content-center">Hello, {username}</span>
                                         <div className="dropdown-divider" />
                                         <Link to={ROUTE_NAME.ORDERS} className="dropdown-item text-center">
                                             My Orders
@@ -330,17 +324,17 @@ class Header extends React.Component {
                         </div>
                     </div>
                 </div>
-                {this.props.notificationMessage && (
-                    <div className={"alert alert-dismissible fade show " + this.props.notificationType} role="alert">
+                {notificationMessage && (
+                    <div className={"alert alert-dismissible fade show " + notificationType} role="alert">
                         <button type="button" className="close" data-dismiss="alert" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
-                        {this.props.notificationMessage}
+                        {notificationMessage}
                     </div>
                 )}
             </header>
         );
-    }
+    };
 }
 
 export default withRouter(Header);

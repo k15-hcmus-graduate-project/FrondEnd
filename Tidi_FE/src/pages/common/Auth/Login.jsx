@@ -3,7 +3,7 @@ import React, { Component } from "react";
 import * as Yup from "yup";
 import { Link, Redirect } from "react-router-dom";
 import { Formik, ErrorMessage } from "formik";
-import { Input, Label, Alert } from "reactstrap";
+import { Input } from "reactstrap";
 import PropTypes from "prop-types";
 import { ROUTE_NAME } from "../../../routes/main.routing";
 import AuthService from "../../../services/AuthService";
@@ -49,7 +49,7 @@ class Login extends Component {
                             <img src="/img/img-01.png" alt="IMG" />
                         </div>
                         <Formik
-                            initialValues={{ name: "jared" }}
+                            initialValues={initValues}
                             validationSchema={SignupSchema}
                             onSubmit={(values, actions) => {
                                 const { username, password } = values;

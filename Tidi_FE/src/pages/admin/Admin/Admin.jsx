@@ -1,15 +1,9 @@
-// Stylesheet
-import './Admin.scss';
+import React from "react";
+import "./Admin.scss";
+import AdminNavBar from "./AdminNavBar";
+import RouteWithSubRoutes from "../../../routes/RouteWithSubRoutes";
 
-// External dependencies
-import React from 'react';
-
-// Internal dependencies
-import AdminNavBar from './AdminNavBar';
-import RouteWithSubRoutes from '../../../routes/RouteWithSubRoutes';
-
-
-export default (props) => (
+export default props => (
     <div className="wrapper">
         <AdminNavBar {...props} />
         <div className="page-wrapper">

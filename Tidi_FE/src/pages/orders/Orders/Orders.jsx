@@ -1,62 +1,50 @@
-// Stylsheet
-import './Order.scss';
-
-// External dependencies
-import React from 'react';
-import { Link } from 'react-router-dom';
-import PropTypes from 'prop-types';
-
-// Internal dependencies
-import WebService from '../../../services/WebService';
-import AuthService from '../../../services/AuthService';
-import { ACTIVE_TYPE } from '../../../config/constants';
-import { withCommas } from '../../../helpers/lib';
-import { ROUTE_NAME } from '../../../routes/main.routing';
-
-
-
-class Order extends React.Component {
+import React, { Component } from "react";
+import { Link } from "react-router-dom";
+import PropTypes from "prop-types";
+import "./Order.scss";
+import WebService from "../../../services/WebService";
+import AuthService from "../../../services/AuthService";
+import { ACTIVE_TYPE } from "../../../config/constants";
+import { withCommas } from "../../../helpers/lib";
+import { ROUTE_NAME } from "../../../routes/main.routing";
+class Order extends Component {
     static propTypes = {
         fetchOrders: PropTypes.func,
         orders: PropTypes.array
-    }
+    };
 
-    constructor(props) {
-        super(props);
-
-
-        this.fetchOrders = this.fetchOrders.bind(this);
-        this.generateTableRows = this.generateTableRows.bind(this);
-    }
-
-    componentWillMount() {
+    componentWillMount = () => {
         this.fetchOrders();
-    }
+    };
 
-    fetchOrders() {
+    fetchOrders = () => {
         WebService.getAllOrders(AuthService.getTokenUnsafe(), 1000, 0, {}).then(res => {
             const result = JSON.parse(res);
-
-            if (result.status && result.status.status === ACTIVE_TYPE.TRUE) {
+            if (result.status && result.status === ACTIVE_TYPE.TRUE) {
                 this.props.fetchOrders(result.orders.reverse());
             }
-        })
-    }
+        });
+    };
 
-    generateTableRows(orders) {
-        return orders.map((order, idx) => {
-            return (
-                <tr key={idx}>
-                    <td>{order.date}</td>
-                    <td>{withCommas(order.total)} ₫</td>
-                    <td>{order.status}</td>
-                    <td><Link to={ROUTE_NAME.ORDER_DETAIL + '/' + order.orderId}>Details</Link></td>
-                </tr>
-            );
-        }).reverse();
-    }
+    generateTableRows = orders => {
+        return orders
+            .map((order, idx) => {
+                console.log(order);
+                return (
+                    <tr key={idx}>
+                        <td>{order.date}</td>
+                        <td>{withCommas(order.total)} ₫</td>
+                        <td>{order.status}</td>
+                        <td>
+                            <Link to={ROUTE_NAME.ORDER_DETAIL + "/" + order.id}>Details</Link>
+                        </td>
+                    </tr>
+                );
+            })
+            .reverse();
+    };
 
-    render() {
+    render = () => {
         return (
             <div>
                 <div className="breadcumb_area bg-img" style={{ backgroundImage: "url(/img/bg-img/breadcumb.jpg)" }}>
@@ -86,12 +74,10 @@ class Order extends React.Component {
                                                     <th scope="col">Date</th>
                                                     <th scope="col">Total</th>
                                                     <th scope="col">Status</th>
-                                                    <th scope="col"></th>
+                                                    <th scope="col" />
                                                 </tr>
                                             </thead>
-                                            <tbody>
-                                                {this.generateTableRows(this.props.orders)}
-                                            </tbody>
+                                            <tbody>{this.generateTableRows(this.props.orders)}</tbody>
                                         </table>
                                     </div>
                                 </div>
@@ -101,7 +87,7 @@ class Order extends React.Component {
                 </section>
             </div>
         );
-    }
+    };
 }
 
 export default Order;

@@ -1,17 +1,19 @@
 // External Dependencies
-import { connect } from 'react-redux';
+import { connect } from "react-redux";
+import Actions from "../duck/actions";
+import Orders from "./Orders";
 
-// Internal Dependencies
-import Actions from '../duck/actions';
-
-import Orders from './Orders';
-
-const mapStateToProps = (state) => ({
-    ...state.orders.Orders,
+const mapStateToProps = state => ({
+    ...state.orders.Orders
 });
 
-const mapDispatchToProps = (dispatch) => ({
-    fetchOrders: (orders) => { dispatch(Actions.fetchOrders(orders)) },
+const mapDispatchToProps = dispatch => ({
+    fetchOrders: orders => {
+        dispatch(Actions.fetchOrders(orders));
+    }
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(Orders);
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(Orders);

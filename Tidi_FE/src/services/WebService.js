@@ -1,20 +1,34 @@
 // External Dependencies
 import Request from "request";
-import Api from "../api/Api";
 import jwtDecode from "jwt-decode";
 import COSNTANT from "../config/constants";
 import {
-    API_BASE_URL,
     API_USERS_ADD,
     API_PRODUCT_INDUSTRY,
     API_PRODUCT_BRAND,
     API_PRODUCT_ALL,
     API_USERS_CART,
     API_USERS_LOGIN,
-    API_USERS_CART_UPDATE,
     API_USERS_ONE,
     API_CHECKOUT_COUPONSTT,
-    API_CHECKOUT
+    API_CHECKOUT,
+    API_USERS_ADMIN_GET,
+    API_USERS_ADMIN_UPDATE,
+    API_USERS_ADMIN_ADD,
+    API_PRODUCT_ADMIN_ALL,
+    API_PRODUCT_ADMIN_BRAND_ALL,
+    API_PRODUCT_ADMIN_INDUSTRY_ALL,
+    API_PRODUCT_ADMIN_BRANCH_ALL,
+    API_PRODUCT_ADMIN_CATEGORY_ALL,
+    API_PRODUCT_ADMIN_UPDATE,
+    API_PRODUCT_ADMIN_ADD,
+    API_PRODUCT_ADMIN_BRAND_UPDATE,
+    API_PRODUCT_ADMIN_BRAND_ADD,
+    API_PRODUCT_ADMIN_BRAND_BRAND,
+    API_CHECKOUT_ADMIN_ORDER,
+    API_CHECKOUT_ORDER,
+    API_CHECKOUT_ORDER_UPDATE,
+    API_CHECKOUT_ORDERDETAIL
 } from "../config/AppConfig";
 
 const apiPrefix = {
@@ -34,16 +48,16 @@ const fetch = ({ method, reqBody, route, jwtToken }) => {
             "x-access-token": jwtToken
         };
 
-        if (jwtToken) {
-            HttpHeader.Authorization = jwtToken;
-        }
+        // if (jwtToken) {
+        //     HttpHeader.Authorization = jwtToken;
+        // }
 
         Request(
             {
                 method,
                 uri: COSNTANT.REST_SERVER + route,
-                qs: reqBody && (method === "POST" || method === "PUT" ? reqBody : undefined),
-                body: reqBody && (method === "POST" || method === "PUT" ? JSON.stringify(reqBody) : undefined),
+                qs: reqBody && (method === "POST" || method === "DELETE" || method === "PUT" ? reqBody : undefined),
+                body: reqBody && (method === "POST" || method === "DELETE" || method === "PUT" ? JSON.stringify(reqBody) : undefined),
                 headers: HttpHeader
             },
             (err, res, body) => {
@@ -244,7 +258,6 @@ export default {
     getCart: token => {
         if (token) {
             const { username } = jwtDecode(token).user;
-            console.log(username);
             return fetch({
                 method: "GET",
                 jwtToken: token,
@@ -304,14 +317,19 @@ export default {
 
     // 4.4 Delete item
     deleteItemFromCart: (token, productId) => {
-        return fetch({
-            method: "POST",
-            reqBody: {
-                productId
-            },
-            jwtToken: token,
-            route: apiPrefix.cart + "/delete"
-        });
+        if (token) {
+            const { username } = jwtDecode(token).user;
+            console.log(username, productId);
+            return fetch({
+                method: "DELETE",
+                reqBody: {
+                    productId: productId,
+                    username: username
+                },
+                jwtToken: token,
+                route: API_USERS_CART
+            });
+        } else return null;
     },
 
     /*
@@ -319,8 +337,9 @@ export default {
      */
 
     // 5.1 Checkout (Cart to Order)
-    toCheckout: (token, couponCode, fullName, phone, email, address, note, shippingMethod, total, finalTotal, cartItems) => {
+    toCheckout: (token, couponCode, fullName, phone, email, address, note, total, finalTotal, products, shippingMethod) => {
         if (token) {
+            console.log(couponCode, fullName, phone, email, address, note, total, finalTotal, products, shippingMethod);
             const { username } = jwtDecode(token).user;
             return fetch({
                 method: "POST",
@@ -332,10 +351,10 @@ export default {
                     email,
                     address,
                     note,
-                    shippingMethod,
                     total,
                     finalTotal,
-                    cartItems
+                    products,
+                    shippingMethod
                 },
                 jwtToken: token,
                 route: API_CHECKOUT
@@ -345,16 +364,18 @@ export default {
 
     // 5.2 Get all orders
     getAllOrders: (token, limit, offset, query) => {
-        return fetch({
-            method: "POST",
-            reqBody: {
-                limit,
-                offset,
-                query
-            },
-            jwtToken: token,
-            route: apiPrefix.checkout + "/all"
-        });
+        if (token) {
+            return fetch({
+                method: "POST",
+                reqBody: {
+                    limit,
+                    offset,
+                    query
+                },
+                jwtToken: token,
+                route: API_CHECKOUT_ORDER
+            });
+        } else return null;
     },
 
     // 5.3 Get one order
@@ -365,7 +386,7 @@ export default {
                 orderId
             },
             jwtToken: token,
-            route: apiPrefix.checkout + "/one"
+            route: API_CHECKOUT_ORDERDETAIL
         });
     },
 
@@ -399,18 +420,20 @@ export default {
 
     // 6.1 Get all accounts
     adminGetAllAccounts: (token, offset, limit, { keyword }) => {
-        return fetch({
-            method: "POST",
-            reqBody: {
-                limit,
-                offset,
-                query: {
-                    keyword
-                }
-            },
-            jwtToken: token,
-            route: apiPrefix.admin + "/account/all"
-        });
+        if (token) {
+            return fetch({
+                method: "POST",
+                reqBody: {
+                    limit,
+                    offset,
+                    query: {
+                        keyword
+                    }
+                },
+                jwtToken: token,
+                route: API_USERS_ADMIN_GET
+            });
+        } else return null;
     },
 
     // 6.2 Create account
@@ -430,7 +453,7 @@ export default {
                 permission
             },
             jwtToken: token,
-            route: apiPrefix.admin + "/account/create"
+            route: API_USERS_ADMIN_ADD
         });
     },
 
@@ -440,60 +463,64 @@ export default {
         id,
         { username, password, email, fullName, dateOfBirth, phone, gender, address, avatar, permission, active }
     ) => {
-        return fetch({
-            method: "POST",
-            reqBody: {
-                id,
-                username,
-                password,
-                email,
-                fullName,
-                dateOfBirth,
-                phone,
-                gender,
-                address,
-                avatar,
-                permission,
-                active
-            },
-            jwtToken: token,
-            route: apiPrefix.admin + "/account/update"
-        });
+        if (token) {
+            return fetch({
+                method: "PUT",
+                reqBody: {
+                    id,
+                    username,
+                    password,
+                    email,
+                    fullName,
+                    dateOfBirth,
+                    phone,
+                    gender,
+                    address,
+                    avatar,
+                    permission,
+                    active
+                },
+                jwtToken: token,
+                route: API_USERS_ADMIN_UPDATE
+            });
+        } else return null;
     },
 
     // 6.4 Get all products
     adminGetAllProducts: (token, limit, offset, { keyword }) => {
-        return fetch({
-            method: "POST",
-            reqBody: {
-                limit,
-                offset,
-                query: {
-                    keyword
-                }
-            },
-            jwtToken: token,
-            route: apiPrefix.admin + "/product/all"
-        });
+        if (token) {
+            return fetch({
+                method: "POST",
+                reqBody: {
+                    limit,
+                    offset,
+                    query: {
+                        keyword
+                    }
+                },
+                jwtToken: token,
+                route: API_PRODUCT_ADMIN_ALL
+            });
+        } else return null;
     },
 
     // 6.5 Insert product
-    adminInsertProduct: (token, { productName, industryId, branchId, categoryId, brandId, price, images, description, amount }) => {
+    adminInsertProduct: (token, { product_name, industry_id, branch_id, category_id, brand_id, price, images, description, amount }) => {
         return fetch({
             method: "POST",
             reqBody: {
-                productName,
-                industryId,
-                branchId,
-                categoryId,
-                brandId,
+                product_name,
+                industry_id,
+                branch_id,
+                category_id,
+                brand_id,
                 price,
                 images,
                 description,
                 amount
             },
             jwtToken: token,
-            route: apiPrefix.admin + "/product/insert"
+            route: API_PRODUCT_ADMIN_ADD
         });
     },
 
@@ -501,69 +528,94 @@ export default {
     adminUpdateProduct: (
         token,
         id,
-        { productName, industryId, branchId, categoryId, brandId, price, images, description, longDescription, amount, active }
+        { product_name, industry_id, branch_id, category_id, brand_id, price, images, description, longDescription, amount, active }
     ) => {
-        return fetch({
-            method: "POST",
-            reqBody: {
-                id,
-                productName,
-                industryId,
-                branchId,
-                categoryId,
-                brandId,
-                price,
-                images,
-                description,
-                longDescription,
-                amount,
-                active
-            },
-            jwtToken: token,
-            route: apiPrefix.admin + "/product/update"
-        });
+        if (token) {
+            return fetch({
+                method: "PUT",
+                reqBody: {
+                    id,
+                    product_name,
+                    industry_id,
+                    branch_id,
+                    category_id,
+                    brand_id,
+                    price,
+                    images,
+                    description,
+                    longDescription,
+                    amount,
+                    active
+                },
+                jwtToken: token,
+                route: API_PRODUCT_ADMIN_UPDATE
+            });
+        } else return null;
     },
 
     // 6.7 Get all brands
     adminGetAllBrands: (token, limit, offset, query) => {
-        return fetch({
-            method: "POST",
-            reqBody: {
-                limit,
-                offset,
-                query: {
-                    ...query
-                }
-            },
-            jwtToken: token,
-            route: apiPrefix.admin + "/brand/all"
-        });
+        if (token) {
+            return fetch({
+                method: "POST",
+                reqBody: {
+                    limit,
+                    offset,
+                    query: {
+                        ...query
+                    }
+                },
+                jwtToken: token,
+                route: API_PRODUCT_ADMIN_BRAND_ALL
+            });
+        } else return null;
+    },
+
+    adminGetAllBrandsBrand: (token, limit, offset, query) => {
+        if (token) {
+            return fetch({
+                method: "POST",
+                reqBody: {
+                    limit,
+                    offset,
+                    query: {
+                        ...query
+                    }
+                },
+                jwtToken: token,
+                route: API_PRODUCT_ADMIN_BRAND_BRAND
+            });
+        } else return null;
     },
 
     // 6.8 Insert brand
-    adminInsertBrand: (token, { brandName }) => {
-        return fetch({
-            method: "POST",
-            reqBody: {
-                brandName
-            },
-            jwtToken: token,
-            route: apiPrefix.admin + "/brand/insert"
-        });
+    adminInsertBrand: (token, { brand_name }) => {
+        if (token) {
+            return fetch({
+                method: "POST",
+                reqBody: {
+                    brand_name
+                },
+                jwtToken: token,
+                route: API_PRODUCT_ADMIN_BRAND_ADD
+            });
+        } else return null;
     },
 
     // 6.9 Update brand
-    adminUpdateBrand: (token, id, { brandName, active }) => {
-        return fetch({
-            method: "POST",
-            reqBody: {
-                id,
-                brandName,
-                active
-            },
-            jwtToken: token,
-            route: apiPrefix.admin + "/brand/update"
-        });
+    adminUpdateBrand: (token, id, { brand_name, active }) => {
+        if (token) {
+            return fetch({
+                method: "PUT",
+                reqBody: {
+                    id,
+                    brand_name,
+                    active
+                },
+                jwtToken: token,
+                route: API_PRODUCT_ADMIN_BRAND_UPDATE
+            });
+        } else return null;
     },
 
     // 6.10 Get all industries
@@ -578,7 +630,7 @@ export default {
                 }
             },
             jwtToken: token,
-            route: apiPrefix.admin + "/industry/all"
+            route: API_PRODUCT_ADMIN_INDUSTRY_ALL
         });
     },
 
@@ -610,18 +662,20 @@ export default {
 
     // 6.13 Get all Branches
     adminGetAllBranches: (token, limit, offset, { keyword }) => {
-        return fetch({
-            method: "POST",
-            reqBody: {
-                limit,
-                offset,
-                query: {
-                    keyword
-                }
-            },
-            jwtToken: token,
-            route: apiPrefix.admin + "/branch/all"
-        });
+        if (token) {
+            return fetch({
+                method: "POST",
+                reqBody: {
+                    limit,
+                    offset,
+                    query: {
+                        keyword
+                    }
+                },
+                jwtToken: token,
+                route: API_PRODUCT_ADMIN_BRANCH_ALL
+            });
+        } else return null;
     },
 
     // 6.14 Insert branch
@@ -664,7 +718,7 @@ export default {
                 }
             },
             jwtToken: token,
-            route: apiPrefix.admin + "/category/all"
+            route: API_PRODUCT_ADMIN_CATEGORY_ALL
         });
     },
 
@@ -865,7 +919,7 @@ export default {
                 }
             },
             jwtToken: token,
-            route: apiPrefix.admin + "/order/all"
+            route: API_CHECKOUT_ADMIN_ORDER
         });
     },
 
@@ -883,15 +937,17 @@ export default {
 
     // 6.30 Change order status
     admimChangeOrderStatus: (token, orderId, status) => {
-        return fetch({
-            method: "POST",
-            reqBody: {
-                orderId,
-                status
-            },
-            jwtToken: token,
-            route: apiPrefix.admin + "/order/update"
-        });
+        if (token) {
+            return fetch({
+                method: "PUT",
+                reqBody: {
+                    orderId,
+                    status
+                },
+                jwtToken: token,
+                route: API_CHECKOUT_ORDER_UPDATE
+            });
+        } else return null;
     },
 
     /*

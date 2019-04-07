@@ -1,4 +1,4 @@
-import Types from './types';
+import Types from "./types";
 
 const INITIAL_STATE = {
     Orders: {
@@ -8,7 +8,7 @@ const INITIAL_STATE = {
     OrderDetail: {
         order: {}
     }
-}
+};
 
 const ordersReducer = (state = INITIAL_STATE, action) => {
     switch (action.type) {
@@ -20,7 +20,7 @@ const ordersReducer = (state = INITIAL_STATE, action) => {
                     orders: action.payload
                 }
             };
-            
+
         case Types.FETCH_ORDER_DETAIL:
             return {
                 ...state,
@@ -32,6 +32,6 @@ const ordersReducer = (state = INITIAL_STATE, action) => {
         default:
             return state;
     }
-}
+};
 
 export default ordersReducer;

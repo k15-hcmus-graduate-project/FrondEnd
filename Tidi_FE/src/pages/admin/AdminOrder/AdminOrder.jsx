@@ -1,35 +1,29 @@
 // Stylsheet
-import './AdminOrder.scss';
-
-// External dependencies
-import React, { Fragment } from 'react';
-import PropTypes from 'prop-types';
-
-// Internal dependencies
-import WebService from '../../../services/WebService';
-import AuthService from '../../../services/AuthService';
-import HelperTool, { withCommas, showAlert } from '../../../helpers/lib';
-import { ORDER_STATUS, ACTIVE_TYPE } from '../../../config/constants';
-
-
-import Paginator from '../../common/Paginator';
-import FormInput from '../../common/FormInput';
+import React, { Fragment, Component } from "react";
+import PropTypes from "prop-types";
+import "./AdminOrder.scss";
+import WebService from "../../../services/WebService";
+import AuthService from "../../../services/AuthService";
+import HelperTool, { withCommas, showAlert } from "../../../helpers/lib";
+import { ORDER_STATUS, ACTIVE_TYPE } from "../../../config/constants";
+import Paginator from "../../common/Paginator";
+import FormInput from "../../common/FormInput";
 
 const INTIAL_STATE = {
     showLoadingBar: false,
-    message: '',
+    message: null,
     orders: []
-}
+};
 
 const INTERNAL_CONFIG = {
-    HEADING_NAME: 'Order',
+    HEADING_NAME: "Order",
     SEARCH_DELAY_DURATION: 300,
     PAGE_SIZE_ARR: [10, 25, 50, 100],
-    MAIN_HEADERS: ['ID', 'Username', 'Date', 'Total', 'Status', 'Actions'],
-    DETAIL_HEADERS: ['Full Name', 'Email', 'Address', 'Phone', 'Note'],
-}
+    MAIN_HEADERS: ["ID", "Username", "Date", "Total", "Status", "Actions"],
+    DETAIL_HEADERS: ["Full Name", "Email", "Address", "Phone", "Note"]
+};
 
-class AdminOrder extends React.Component {
+class AdminOrder extends Component {
     static propTypes = {
         currentPage: PropTypes.number,
         pageSize: PropTypes.number,
@@ -39,102 +33,88 @@ class AdminOrder extends React.Component {
         query: PropTypes.shape({
             keyword: PropTypes.string
         })
-    }
+    };
 
     orderToBlock = null;
     originalAccountInfo = {};
     searchInterval = null;
     _isMounted = false;
 
-    constructor(props) {
+    constructor(props: any) {
         super(props);
-
         this.state = INTIAL_STATE;
-
-        this.handleFilterChange = this.handleFilterChange.bind(this);
-        this.handleUpdateOrder = this.handleUpdateOrder.bind(this);
-        this.generateTableRows = this.generateTableRows.bind(this);
-        this.fetchOrders = this.fetchOrders.bind(this);
-
         this.props.changePageInfo({
             currentPage: 1,
-            pageSize: INTERNAL_CONFIG.PAGE_SIZE_ARR[0],
+            pageSize: INTERNAL_CONFIG.PAGE_SIZE_ARR[0]
         });
     }
 
-    componentWillMount() {
-        const params = new URLSearchParams(this.props.history.location.search);
-        const pageIndex = Number(params.get('page'));
-        const pageSize = Number(params.get('size'));
-        if (
-            pageIndex
-            && pageSize
-            && INTERNAL_CONFIG.PAGE_SIZE_ARR.indexOf(pageSize) !== -1
-        ) {
+    componentWillMount = () => {
+        const { history, currentPage, query } = this.props;
+        const params = new URLSearchParams(history.location.search);
+        const pageIndex = Number(params.get("page"));
+        const pageSize = Number(params.get("size"));
+        if (pageIndex && pageSize && INTERNAL_CONFIG.PAGE_SIZE_ARR.indexOf(pageSize) !== -1) {
             this.handleFilterChange({
                 currentPage: pageIndex,
                 pageSize: pageSize
             });
         } else {
-            this.fetchOrders(this.props.currentPage, INTERNAL_CONFIG.PAGE_SIZE_ARR[0], this.props.query);
-            this.updateURLParams(this.props.currentPage, INTERNAL_CONFIG.PAGE_SIZE_ARR[0]);
+            this.fetchOrders(currentPage, INTERNAL_CONFIG.PAGE_SIZE_ARR[0], query);
+            this.updateURLParams(currentPage, INTERNAL_CONFIG.PAGE_SIZE_ARR[0]);
         }
-    }
+    };
 
-    updateURLParams(currentPage, pageSize) {
+    updateURLParams = (currentPage, pageSize) => {
         this.props.history.push({
             search: `?size=${pageSize || this.props.pageSize}&page=${currentPage || this.props.currentPage}`
         });
-    }
+    };
 
-    componentDidMount() {
+    componentDidMount = () => {
         this._isMounted = true;
-    }
+    };
 
-    componentWillUnmount() {
+    componentWillUnmount = () => {
         this._isMounted = false;
-    }
+    };
 
-    fetchOrders(currentPage, pageSize, query = {}) {
+    fetchOrders = (currentPage, pageSize, query = {}) => {
         this.setState({
-            showLoadingBar: true,
+            showLoadingBar: true
         });
 
-        WebService.adminGetAllOrders(AuthService.getTokenUnsafe(), pageSize, (currentPage - 1) * pageSize, query)
-            .then(res => {
-                const result = JSON.parse(res);
-                // this.props.fetchOrders(result.orders);
+        WebService.adminGetAllOrders(AuthService.getTokenUnsafe(), pageSize, (currentPage - 1) * pageSize, query).then(res => {
+            const result = JSON.parse(res);
+            // this.props.fetchOrders(result.orders);
+            console.log(result);
+            if (result.orders && result.status === ACTIVE_TYPE.TRUE) {
+                result.orders.forEach(order => {
+                    // backup original order status
+                    order.originalStatus = order.status;
+                });
 
-                if (result.orders && result.status.status === ACTIVE_TYPE.TRUE) {
+                this.setState({
+                    orders: result.orders
+                });
 
-                    result.orders.forEach(order => {
-                        // backup original order status
-                        order.originalStatus = order.status;
-                    });
+                this.handleFilterChange({
+                    totalItems: result.totalItems
+                });
 
+                if (this._isMounted) {
                     this.setState({
-                        orders: result.orders
+                        showLoadingBar: false
                     });
-
-
-                    this.handleFilterChange({
-                        totalItems: result.totalItems
-                    });
-
-
-                    if (this._isMounted) {
-                        this.setState({
-                            showLoadingBar: false,
-                        });
-                    }
-                } else {
-                    showAlert(result.status.message, 'error');
                 }
-            });
-    }
+            } else {
+                showAlert(result.message, "error");
+            }
+        });
+    };
 
-    handleFilterChange({ currentPage, pageSize, totalItems }) {
-        let payloadObj = {}
+    handleFilterChange = ({ currentPage, pageSize, totalItems }) => {
+        let payloadObj = {};
 
         if (currentPage) {
             payloadObj.currentPage = Number(currentPage);
@@ -157,36 +137,32 @@ class AdminOrder extends React.Component {
                 this.props.query
             );
         }
-    }
+    };
 
-    handleChangeKeyword(e) {
+    handleChangeKeyword = e => {
         this.props.updateFilter({ keyword: e.target.value });
         clearTimeout(this.searchInterval);
         this.searchInterval = setTimeout(() => {
             this.handleSearch();
         }, INTERNAL_CONFIG.SEARCH_DELAY_DURATION);
-    }
+    };
 
-    handleSearch() {
-        this.fetchOrders(this.props.currentPage, this.props.pageSize, this.props.query)
-    }
+    handleSearch = () => {
+        this.fetchOrders(this.props.currentPage, this.props.pageSize, this.props.query);
+    };
 
-
-    handleUpdateOrder(order) {
+    handleUpdateOrder = order => {
         if (order.status !== order.originalStatus) {
             WebService.admimChangeOrderStatus(AuthService.getTokenUnsafe(), order.id, order.status).then(res => {
                 const result = JSON.parse(res);
-
-
                 if (result.status === ACTIVE_TYPE.TRUE) {
                     this.fetchOrders(this.props.currentPage, INTERNAL_CONFIG.PAGE_SIZE_ARR[0], this.props.query);
                 }
-            })
+            });
         }
-    }
+    };
 
-
-    generateTableRows(orders) {
+    generateTableRows = orders => {
         let r = [];
 
         orders.forEach((order, id) => {
@@ -201,8 +177,16 @@ class AdminOrder extends React.Component {
                             <FormInput
                                 type="select"
                                 value={order.status}
-                                options={[ORDER_STATUS.CHECKED, ORDER_STATUS.PACKING, ORDER_STATUS.SHIPPING, ORDER_STATUS.SUCCESSFUL, ORDER_STATUS.CANCELED, ORDER_STATUS.PAID, ORDER_STATUS.PENDING]}
-                                onChangeHandler={(e) => {
+                                options={[
+                                    ORDER_STATUS.CHECKED,
+                                    ORDER_STATUS.PACKING,
+                                    ORDER_STATUS.SHIPPING,
+                                    ORDER_STATUS.SUCCESSFUL,
+                                    ORDER_STATUS.CANCELED,
+                                    ORDER_STATUS.PAID,
+                                    ORDER_STATUS.PENDING
+                                ]}
+                                onChangeHandler={e => {
                                     order.status = e.target.value;
                                     this.forceUpdate();
                                 }}
@@ -211,13 +195,18 @@ class AdminOrder extends React.Component {
                         </td>
                         <td>
                             <div className="btn-group">
-                                <button className="btn btn-info btn-sm" type="button" data-toggle="collapse" data-target={"#detailbox" + order.id} aria-expanded="false" aria-controls="collapseExample">
-                                    <i className="fa fa-info-circle"></i> Detail
-                                </button>
-                                <button className="btn btn-warning btn-sm" type="button"
-                                    onClick={() => this.handleUpdateOrder(order)}
+                                <button
+                                    className="btn btn-info btn-sm"
+                                    type="button"
+                                    data-toggle="collapse"
+                                    data-target={"#detailbox" + order.id}
+                                    aria-expanded="false"
+                                    aria-controls="collapseExample"
                                 >
-                                    <i className="fa fa-edit"></i> Update
+                                    <i className="fa fa-info-circle" /> Detail
+                                </button>
+                                <button className="btn btn-warning btn-sm" type="button" onClick={() => this.handleUpdateOrder(order)}>
+                                    <i className="fa fa-edit" /> Update
                                 </button>
                             </div>
                         </td>
@@ -226,15 +215,21 @@ class AdminOrder extends React.Component {
                     {/* ROW DETAIL */}
                     <tr className="collapse no-hover" id={"detailbox" + order.id}>
                         <td colSpan={INTERNAL_CONFIG.MAIN_HEADERS.length}>
-                            <div className="card card-body" style={{ 'border': 'none' }}>
+                            <div className="card card-body" style={{ border: "none" }}>
                                 <table className="table table-sm">
-                                    <thead>
-                                        {HelperTool.generateTableHeaders(INTERNAL_CONFIG.DETAIL_HEADERS)}
-                                    </thead>
+                                    <thead>{HelperTool.generateTableHeaders(INTERNAL_CONFIG.DETAIL_HEADERS)}</thead>
                                     <tbody>
                                         <tr>
                                             <td>
-                                                <img src={order.avatar ? order.avatar : 'http://bestnycacupuncturist.com/wp-content/uploads/2016/11/anonymous-avatar-sm.jpg'} alt="NONE" style={{ width: 40 }} />
+                                                <img
+                                                    src={
+                                                        order.avatar
+                                                            ? order.avatar
+                                                            : "http://bestnycacupuncturist.com/wp-content/uploads/2016/11/anonymous-avatar-sm.jpg"
+                                                    }
+                                                    alt="NONE"
+                                                    style={{ width: 40 }}
+                                                />
                                                 {order.user.fullName}
                                             </td>
                                             <td>{order.user.email}</td>
@@ -246,8 +241,10 @@ class AdminOrder extends React.Component {
                                             <td colSpan="5">
                                                 {order.products.map((prd, idx) => {
                                                     return (
-                                                        <div key={idx}>[{prd.id}] {prd.productName} ({withCommas(prd.price)}₫) - X{prd.amount}</div>
-                                                    )
+                                                        <div key={idx}>
+                                                            [{prd.id}] {prd.product_name} ({withCommas(prd.price)}₫) - X{prd.amount}
+                                                        </div>
+                                                    );
                                                 })}
                                             </td>
                                         </tr>
@@ -255,8 +252,10 @@ class AdminOrder extends React.Component {
                                             <td colSpan="5">
                                                 {order.history.map((his, idx) => {
                                                     return (
-                                                        <div key={idx}>{[his.date]} | {his.status}</div>
-                                                    )
+                                                        <div key={idx}>
+                                                            {[his.date]} | {his.status}
+                                                        </div>
+                                                    );
                                                 })}
                                             </td>
                                         </tr>
@@ -266,31 +265,28 @@ class AdminOrder extends React.Component {
                         </td>
                     </tr>
                 </Fragment>
-            )
+            );
         });
 
         return r;
-    }
+    };
 
-    render() {
+    render = () => {
+        const { pageSize, currentPage, totalItems } = this.props;
+        const { showLoadingBar, orders } = this.state;
         return (
             <div className="container-fluid">
                 <h2>{INTERNAL_CONFIG.HEADING_NAME}</h2>
                 <hr />
                 <div className="card">
-                    <div className="card-header d-flex justify-content-end">
-                        {/* <input className="search-bar form-control col-md-4 col-sm-6" type="text" placeholder="Search for something..."
-                            value={this.props.query.keyword}
-                            onChange={(e) => this.handleChangeKeyword(e)}
-                            onKeyDown={(e) => e.keyCode === 13 && this.handleSearch()}
-                        /> */}
-                    </div>
+                    <div className="card-header d-flex justify-content-end" />
                     <div className="card-body">
                         <div className="controllers d-flex">
                             <div>
-                                <select className="form-control input-sm"
-                                    value={this.props.pageSize}
-                                    onChange={(e) => {
+                                <select
+                                    className="form-control input-sm"
+                                    value={pageSize}
+                                    onChange={e => {
                                         this.handleFilterChange({
                                             pageSize: e.target.value
                                         });
@@ -302,40 +298,42 @@ class AdminOrder extends React.Component {
                                     <option value="100">100</option>
                                 </select>
                             </div>
-                            <div className="control-buttons btn-group justify-content-space-between">
-                                {/* <!-- Button trigger modal --> */}
-                                {/* <button className="btn btn-success" data-toggle="modal" data-target="#add-order-modal"
-                                    onClick={() => {
-                                        this.clearFormData();
-                                    }}
-                                >
-                                    <i className="fa fa-plus-circle mr-2"></i>Add order
-                                </button> */}
-                            </div>
+                            <div className="control-buttons btn-group justify-content-space-between" />
                         </div>
                         <div className="d-flex justify-content-between">
-                            <span>Display {((this.props.pageSize * this.props.currentPage) > this.props.totalItems) ? this.props.totalItems : (this.props.pageSize * this.props.currentPage)} / {this.props.totalItems}</span>
+                            <span>
+                                Display {pageSize * currentPage > totalItems ? totalItems : pageSize * currentPage} / {totalItems}
+                            </span>
                             {/* <span>{this.state.message}</span> */}
                         </div>
-                        <div className="table-container" style={{ position: 'relative' }}>
-                            <div className="progress" style={{ width: '100%', height: 5, position: 'absolute' }} hidden={this.state.showLoadingBar ? "" : "hidden"}>
-                                <div className="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style={{ "width": "100%" }}></div>
+                        <div className="table-container" style={{ position: "relative" }}>
+                            <div
+                                className="progress"
+                                style={{ width: "100%", height: 5, position: "absolute" }}
+                                hidden={showLoadingBar ? "" : "hidden"}
+                            >
+                                <div
+                                    className="progress-bar progress-bar-striped progress-bar-animated bg-success"
+                                    role="progressbar"
+                                    aria-valuenow="75"
+                                    aria-valuemin="0"
+                                    aria-valuemax="100"
+                                    style={{ width: "100%" }}
+                                />
                             </div>
-                            <div className="table-container table-responsive" >
+                            <div className="table-container table-responsive">
                                 <table className="table table-hover table-sm table-bordered">
-                                    <thead className="">
-                                        {HelperTool.generateTableHeaders(INTERNAL_CONFIG.MAIN_HEADERS)}
-                                    </thead>
-                                    <tbody>
-                                        {this.generateTableRows(this.state.orders)}
-                                    </tbody>
+                                    <thead className="">{HelperTool.generateTableHeaders(INTERNAL_CONFIG.MAIN_HEADERS)}</thead>
+                                    <tbody>{this.generateTableRows(orders)}</tbody>
                                 </table>
 
                                 <Paginator
-                                    handlePageChange={(currentPage) => { this.handleFilterChange({ currentPage }) }}
-                                    currentPage={this.props.currentPage}
-                                    pageSize={this.props.pageSize}
-                                    totalItems={this.props.totalItems}
+                                    handlePageChange={currentPage => {
+                                        this.handleFilterChange({ currentPage });
+                                    }}
+                                    currentPage={currentPage}
+                                    pageSize={pageSize}
+                                    totalItems={totalItems}
                                 />
                             </div>
                         </div>
@@ -343,8 +341,7 @@ class AdminOrder extends React.Component {
                 </div>
             </div>
         );
-    }
+    };
 }
-
 
 export default AdminOrder;

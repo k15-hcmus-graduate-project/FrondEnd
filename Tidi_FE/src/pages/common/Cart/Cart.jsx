@@ -1,10 +1,7 @@
-// StyleSheets
-import "./Cart.scss";
-
-// External Denpendencies
-import React from "react";
+import React, { Component } from "react";
 import { Link } from "react-router-dom";
 import PropTypes from "prop-types";
+import "./Cart.scss";
 import { ROUTE_NAME } from "../../../routes/main.routing";
 import { withCommas, showAlert } from "../../../helpers/lib";
 import WebService from "../../../services/WebService";
@@ -15,7 +12,7 @@ const INTERNAL_CONFIG = {
     AMOUNT_UPATE_DELAY_DURATION: 300
 };
 
-class Cart extends React.Component {
+class Cart extends Component {
     static propTypes = {
         toggleCart: PropTypes.func,
         updateCartProducts: PropTypes.func,
@@ -39,7 +36,6 @@ class Cart extends React.Component {
             AuthService.verifyToken(changeLoginStatus);
             WebService.getCart(AuthService.getTokenUnsafe()).then(res => {
                 const result = JSON.parse(res);
-                console.log(result);
                 if (result.status && result.status === true) {
                     if (result.products) {
                         result.products.forEach(prd => {
@@ -55,10 +51,11 @@ class Cart extends React.Component {
     handleProductRemove = product => {
         if (product.id) {
             WebService.deleteItemFromCart(AuthService.getTokenUnsafe(), product.id).then(r => {
+                console.log(r);
                 const res = JSON.parse(r);
 
-                if (res.status === ACTIVE_TYPE.TRUE) {
-                    showAlert(`Removed ${product.productName}`);
+                if (res.code === 200) {
+                    showAlert(`Removed ${product.product_name}`);
                     this.fetchCartProducts();
                 }
             });
@@ -90,7 +87,6 @@ class Cart extends React.Component {
         if (products) {
             products.forEach((cartItem, index) => {
                 const discountedPrice = cartItem.price - cartItem.price * cartItem.discPercent;
-                console.log(cartItem);
 
                 R.push(
                     <div key={index} className="single-cart-item">
@@ -142,7 +138,6 @@ class Cart extends React.Component {
         let total = 0;
         const { products } = this.props;
         if (products) {
-            console.log(products);
             products.forEach((cartItem, index) => {
                 let itemPrice = (cartItem.price - cartItem.price * cartItem.discPercent) * cartItem.amount;
 

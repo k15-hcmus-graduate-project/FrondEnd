@@ -71,11 +71,11 @@ export const DEFAULT_FORMDATA = {
 
     AdminAddProduct: {
         id: "",
-        productName: "",
-        brandId: 1,
-        industryId: 1,
-        branchId: 1,
-        categoryId: 1,
+        product_name: "",
+        brand_id: 1,
+        industry_id: 1,
+        branch_id: 1,
+        category_id: 1,
         price: 0,
         images: '["https://www.twsf.com.tw/taipei/images/default.jpg"]',
         description: "",
@@ -85,7 +85,7 @@ export const DEFAULT_FORMDATA = {
 
     AdminAddBrand: {
         id: "",
-        brandName: ""
+        brand_name: ""
     }
 };
 

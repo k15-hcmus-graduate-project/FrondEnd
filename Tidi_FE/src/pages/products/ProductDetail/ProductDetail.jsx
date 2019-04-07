@@ -1,5 +1,6 @@
 // StyleSheets
 import React, { Component } from "react";
+import _ from "lodash";
 import PropTypes from "prop-types";
 import { FacebookProvider, Comments } from "react-facebook";
 import "./ProductDetail.scss";
@@ -23,7 +24,7 @@ class ProductDetail extends Component {
         })
     };
 
-    constructor(props) {
+    constructor(props: any) {
         super(props);
         this.state = INTITIAL_STATE;
     }
@@ -43,10 +44,8 @@ class ProductDetail extends Component {
         if (!isNaN(productId) && productId > 0) {
             WebService.getProduct(productId).then(res => {
                 const product = JSON.parse(res);
-                console.log(product);
                 if (product.status !== 500) {
                     product.images = JSON.parse(product.images);
-                    console.log(product.images);
                     this.setState({
                         product,
                         productFound: true
@@ -60,12 +59,9 @@ class ProductDetail extends Component {
 
     fetchCartProducts = () => {
         const { isLoggedIn } = this.props;
-        console.log(isLoggedIn);
         if (isLoggedIn) {
             WebService.getCart(AuthService.getTokenUnsafe()).then(res => {
-                console.log(res);
                 const result = JSON.parse(res);
-                console.log(result);
                 if (result.status.status === "TRUE") {
                     if (result.products) {
                         result.products.forEach(prd => (prd.images = JSON.parse(prd.images)));
@@ -82,16 +78,16 @@ class ProductDetail extends Component {
             const currentCartItems = cart.products;
             if (product.id) {
                 let cartItemAmount = 0;
-                if (currentCartItems)
-                    currentCartItems.map(cartItem => {
+                if (currentCartItems) {
+                    //  no-unused-vars
+                    _.map(currentCartItems, cartItem => {
                         if (cartItem.id === product.id) {
-                            console.log(cartItem);
                             cartItemAmount = cartItem.amount;
                         }
                     });
+                }
                 cartItemAmount += 1;
                 WebService.addItemToCart(AuthService.getTokenUnsafe(), product.id, cartItemAmount).then(r => {
-                    console.log(r);
                     const res = JSON.parse(r);
                     if (res.status) {
                         showAlert(`Added ${product.productName} to Cart!`);
@@ -106,8 +102,9 @@ class ProductDetail extends Component {
 
     generatePictures = () => {
         let r = [];
-        if (this.state.product.images) {
-            this.state.product.images.forEach((imageURL, index) => {
+        const { images } = this.state.product;
+        if (images) {
+            images.forEach((imageURL, index) => {
                 r.push(
                     <div key={index} className={"carousel-item" + (index === 0 ? " active" : "")}>
                         <img className="d-block w-100" src={imageURL} alt="" />
@@ -120,12 +117,12 @@ class ProductDetail extends Component {
     };
 
     render = () => {
-        if (!this.state.productFound) {
+        const { productFound, product } = this.state;
+        if (!productFound) {
             return <div className="d-flex justify-content-center p-5">Product not found</div>;
-        } else if (Object.keys(this.state.product).length === 0) {
+        } else if (Object.keys(product).length === 0) {
             return <Loader />;
         } else {
-            const { product } = this.state;
             const discountedPercent = Math.round(product.discPercent * 100);
             const discountedPrice = Math.round(product.price - product.price * product.discPercent);
             const listdescription = product.description.split("\n");
@@ -137,7 +134,6 @@ class ProductDetail extends Component {
                     </p>
                 );
             }
-            console.log(listDescription);
             return (
                 <div className="single_product_details_area d-flex align-items-center">
                     <div id="images-slider" className="single_product_thumb carousel slide" data-ride="carousel">

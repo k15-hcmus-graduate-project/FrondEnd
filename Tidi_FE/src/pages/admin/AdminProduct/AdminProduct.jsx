@@ -1,41 +1,46 @@
 // Stylsheet
-import './AdminProduct.scss';
-
-// External dependencies
-import React, { Fragment } from 'react';
-import PropTypes from 'prop-types';
-
-// Internal dependencies
-import WebService from '../../../services/WebService';
-import AuthService from '../../../services/AuthService';
-import HelperTool, { showAlert } from '../../../helpers/lib';
-import { DEFAULT_FORMDATA, ACTIVE_TYPE } from '../../../config/constants';
-
-import Modal from '../../common/Modal';
-import AdminAddProduct from './AdminAddProduct';
-import Paginator from '../../common/Paginator';
-import Message from '../../common/FormMessage';
+import React, { Fragment, Component } from "react";
+import PropTypes from "prop-types";
+import "./AdminProduct.scss";
+import WebService from "../../../services/WebService";
+import AuthService from "../../../services/AuthService";
+import HelperTool, { showAlert } from "../../../helpers/lib";
+import { DEFAULT_FORMDATA, ACTIVE_TYPE } from "../../../config/constants";
+import Modal from "../../common/Modal";
+import AdminAddProduct from "./AdminAddProduct";
+import Paginator from "../../common/Paginator";
+import Message from "../../common/FormMessage";
 
 const INTIAL_STATE = {
     showLoadingBar: false,
-    message: '',
+    message: null,
     brands: [],
     industries: [],
     selectedIndustryId: 0,
     branches: [],
     selectedBranchId: 0,
     categories: []
-}
+};
 
 const INTERNAL_CONFIG = {
-    HEADING_NAME: 'Product',
+    HEADING_NAME: "Product",
     SEARCH_DELAY_DURATION: 300,
     PAGE_SIZE_ARR: [10, 25, 50, 100],
-    MAIN_HEADERS: ['ID', 'Product Name', 'Price', 'In Stock', 'Brand', 'Category', 'Active', 'Actions'],
-    DETAIL_HEADERS: ['Images', 'Description'],
-}
+    MAIN_HEADERS: ["ID", "Product Name", "Price", "In Stock", "Brand", "Category", "Active", "Actions"],
+    DETAIL_HEADERS: ["Images", "Description"]
+};
+type State = {
+    brands: Array<any>,
+    industries: Array<any>,
+    branches: Array<any>,
+    categories: Array<any>,
+    showLoadingBar: boolean,
+    message: Object,
+    selectedIndustryId: number,
+    selectedBranchId: number
+};
 
-class AdminProduct extends React.Component {
+class AdminProduct extends Component<State> {
     static propTypes = {
         currentPage: PropTypes.number,
         pageSize: PropTypes.number,
@@ -46,90 +51,67 @@ class AdminProduct extends React.Component {
             keyword: PropTypes.string
         }),
         formData: PropTypes.object
-    }
+    };
 
     productToBlock = null;
     originalProductInfo = {};
     searchInterval = null;
     _isMounted = false;
 
-    constructor(props) {
+    constructor(props: any) {
         super(props);
-
         this.orignalBranches = [];
         this.originalCategories = [];
-
         this.state = INTIAL_STATE;
-
-        this.handleFilterChange = this.handleFilterChange.bind(this);
-        this.handleAddProduct = this.handleAddProduct.bind(this);
-        this.handleUpdateProduct = this.handleUpdateProduct.bind(this);
-        this.handleDeleteProduct = this.handleDeleteProduct.bind(this);
-        this.handleIndustryChange = this.handleIndustryChange.bind(this);
-        this.handleBranchChange = this.handleBranchChange.bind(this);
-        this.prepareFormData = this.prepareFormData.bind(this);
-        this.generateTableRows = this.generateTableRows.bind(this);
-        this.fetchProducts = this.fetchProducts.bind(this);
-        this.fetchAllBrands = this.fetchAllBrands.bind(this);
-        this.fetchAllIndustries = this.fetchAllIndustries.bind(this);
-        this.fetchAllBranches = this.fetchAllBranches.bind(this);
-        this.fetchAllCategories = this.fetchAllCategories.bind(this);
-
         this.props.changePageInfo({
             currentPage: 1,
-            pageSize: INTERNAL_CONFIG.PAGE_SIZE_ARR[0],
+            pageSize: INTERNAL_CONFIG.PAGE_SIZE_ARR[0]
         });
     }
 
-    componentWillMount() {
+    componentWillMount = () => {
         const params = new URLSearchParams(this.props.history.location.search);
-        const pageIndex = Number(params.get('page'));
-        const pageSize = Number(params.get('size'));
-        if (
-            pageIndex
-            && pageSize
-            && INTERNAL_CONFIG.PAGE_SIZE_ARR.indexOf(pageSize) !== -1
-        ) {
+        const pageIndex = Number(params.get("page"));
+        const pageSize = Number(params.get("size"));
+        if (pageIndex && pageSize && INTERNAL_CONFIG.PAGE_SIZE_ARR.indexOf(pageSize) !== -1) {
             this.handleFilterChange({
                 currentPage: pageIndex,
                 pageSize: pageSize
             });
         } else {
-            this.fetchProducts(this.props.currentPage, INTERNAL_CONFIG.PAGE_SIZE_ARR[0], this.props.query);
-            this.updateURLParams(this.props.currentPage, INTERNAL_CONFIG.PAGE_SIZE_ARR[0]);
+            const { currentPage, query } = this.props;
+            this.fetchProducts(currentPage, INTERNAL_CONFIG.PAGE_SIZE_ARR[0], query);
+            this.updateURLParams(currentPage, INTERNAL_CONFIG.PAGE_SIZE_ARR[0]);
         }
 
         this.fetchAllBrands();
         this.fetchAllIndustries();
         this.fetchAllBranches();
         this.fetchAllCategories();
-    }
+    };
 
-    componentDidMount() {
+    componentDidMount = () => {
         this._isMounted = true;
-    }
+    };
 
-    componentWillUnmount() {
+    componentWillUnmount = () => {
         this._isMounted = false;
-    }
+    };
 
-    updateURLParams(currentPage, pageSize) {
+    updateURLParams = (currentPage, pageSize) => {
         this.props.history.push({
             search: `?size=${pageSize || this.props.pageSize}&page=${currentPage || this.props.currentPage}`
         });
-    }
+    };
 
-    fetchProducts(currentPage, pageSize, query = {}) {
+    fetchProducts = (currentPage, pageSize, query = {}) => {
         this.setState({
-            showLoadingBar: true,
+            showLoadingBar: true
         });
-
-        WebService.adminGetAllProducts(AuthService.getTokenUnsafe(), pageSize, ((currentPage - 1) * pageSize), query)
+        WebService.adminGetAllProducts(AuthService.getTokenUnsafe(), pageSize, (currentPage - 1) * pageSize, query)
             .then(res => {
                 const result = JSON.parse(res);
-
-                if (result.status.status === ACTIVE_TYPE.TRUE && result.products) {
-
+                if (result.status === ACTIVE_TYPE.TRUE && result.products) {
                     this.props.fetchProducts(result.products);
                     this.handleFilterChange({
                         totalItems: result.totalItems
@@ -137,116 +119,116 @@ class AdminProduct extends React.Component {
 
                     if (this._isMounted) {
                         this.setState({
-                            showLoadingBar: false,
+                            showLoadingBar: false
                         });
                     }
                 } else {
-                    showAlert(result.status.message, 'error');
+                    showAlert(result.message, "error");
                 }
+            })
+            .catch(err => {
+                console.log("Have error when get admin products.", err);
             });
-    }
+    };
 
-    fetchAllBrands() {
-        WebService.adminGetAllBrands(AuthService.getTokenUnsafe(), 10000, 0, {}).then(res => {
-            const result = JSON.parse(res);
-
-            if (result.status && result.status.status === ACTIVE_TYPE.TRUE) {
-                if (this._isMounted) {
-                    this.setState({
-                        brands: result.brands
-                    });
+    fetchAllBrands = () => {
+        WebService.adminGetAllBrands(AuthService.getTokenUnsafe(), 10000, 0, {})
+            .then(res => {
+                const result = JSON.parse(res);
+                if (result.status && result.status === ACTIVE_TYPE.TRUE) {
+                    if (this._isMounted) {
+                        this.setState({
+                            brands: result.brands
+                        });
+                    }
                 }
-            }
-        })
-    }
+            })
+            .catch(err => {
+                console.log("error when get brands.");
+            });
+    };
 
-    fetchAllIndustries() {
+    fetchAllIndustries = () => {
         WebService.adminGetAllIndustries(AuthService.getTokenUnsafe(), 10000, 0, {}).then(res => {
             const result = JSON.parse(res);
-
-            if (result.status && result.status.status === ACTIVE_TYPE.TRUE) {
+            if (result.status && result.status === ACTIVE_TYPE.TRUE) {
                 if (this._isMounted) {
                     this.setState({
                         industries: result.industries
                     });
                 }
             }
-        })
-    }
+        });
+    };
 
-    fetchAllBranches() {
+    fetchAllBranches = () => {
         WebService.adminGetAllBranches(AuthService.getTokenUnsafe(), 10000, 0, {}).then(res => {
             const result = JSON.parse(res);
-
-            if (result.status && result.status.status === ACTIVE_TYPE.TRUE) {
+            if (result.status && result.status === ACTIVE_TYPE.TRUE) {
                 this.orignalBranches = result.branches;
-                this.handleIndustryChange(this.props.formData.industryId);
+                this.handleIndustryChange(this.props.formData.industry_id);
             }
-        })
-    }
+        });
+    };
 
-    fetchAllCategories() {
+    fetchAllCategories = () => {
         WebService.adminGetAllCategories(AuthService.getTokenUnsafe(), 10000, 0, {}).then(res => {
             const result = JSON.parse(res);
 
-            if (result.status && result.status.status === ACTIVE_TYPE.TRUE) {
+            if (result.status && result.status === ACTIVE_TYPE.TRUE) {
                 this.originalCategories = result.categories;
-                this.handleBranchChange(this.props.formData.branchId);
+                this.handleBranchChange(this.props.formData.branch_id);
             }
-        })
-    }
-
-    prepareFormData(data) {
-        this.setState({
-            message: ''
         });
+    };
 
+    prepareFormData = data => {
+        this.setState({
+            message: null
+        });
         for (let attr in data) {
-            if (!(attr in DEFAULT_FORMDATA.AdminAddProduct)) {
-                data[attr + 'Id'] = data[attr].id;
+            if (!(attr in DEFAULT_FORMDATA.AdminAddProduct) && data[attr]) {
+                console.log(data[attr]);
+                data[attr + "Id"] = data[attr].id;
                 delete data[attr];
             } else if (data[attr] === null) {
-                data[attr] = '';
+                data[attr] = "";
             }
         }
-
         this.originalProductInfo = data;
         this.props.setFormData(data);
-    }
+    };
 
-    clearFormData() {
+    clearFormData = () => {
         this.setState({
-            message: ''
+            message: null
         });
 
-
         this.props.setFormData(DEFAULT_FORMDATA.AdminAddProduct);
-    }
+    };
 
-    handleIndustryChange(newIndustryId) {
-        // eslint-disable-next-line
-        const filteredBranches = this.orignalBranches.filter(branch => branch.industry.id == newIndustryId);
+    handleIndustryChange = newIndustryId => {
+        const filteredBranches = this.orignalBranches.filter(branch => branch.industry_id === parseInt(newIndustryId));
         this.setState({
             branches: filteredBranches
         });
         this.handleBranchChange(filteredBranches[0] && filteredBranches[0].id);
-    }
+    };
 
-    handleBranchChange(newBranchId) {
-        if (newBranchId) {
+    handleBranchChange = newBranchId => {
+        if (newBranchId && this.originalCategories) {
             this.setState({
-                // eslint-disable-next-line
-                categories: this.originalCategories.filter(cat => cat.branch.id == newBranchId)
+                categories: this.originalCategories.filter(cat => cat.branch_id === parseInt(newBranchId))
             });
         } else {
             this.setState({
                 categories: []
-            })
+            });
         }
-    }
+    };
 
-    handleFilterChange({ currentPage, pageSize, totalItems }) {
-        let payloadObj = {}
+    handleFilterChange = ({ currentPage, pageSize, totalItems }) => {
+        let payloadObj = {};
 
         if (currentPage) {
             payloadObj.currentPage = Number(currentPage);
@@ -270,113 +252,112 @@ class AdminProduct extends React.Component {
                 this.props.query
             );
         }
-    }
+    };
 
-    handleChangeKeyword(e) {
+    handleChangeKeyword = e => {
         this.props.updateFilter({ keyword: e.target.value });
         clearTimeout(this.searchInterval);
         this.searchInterval = setTimeout(() => {
             this.handleSearch();
         }, INTERNAL_CONFIG.SEARCH_DELAY_DURATION);
-    }
+    };
 
-    handleSearch() {
-        this.fetchProducts(this.props.currentPage, this.props.pageSize, this.props.query)
-    }
+    handleSearch = () => {
+        this.fetchProducts(this.props.currentPage, this.props.pageSize, this.props.query);
+    };
 
-
-    handleUpdateProduct() {
+    handleUpdateProduct = () => {
+        const { formData, productName, currentPage, pageSize, query } = this.props;
         return new Promise((resolve, reject) => {
             const newInfo = {};
-            for (let attr in this.props.formData) {
-                if (attr !== 'password' && this.props.formData[attr] !== this.originalProductInfo[attr]) {
-                    newInfo[attr] = this.props.formData[attr];
+            for (let attr in formData) {
+                if (attr !== "password" && formData[attr] !== this.originalProductInfo[attr]) {
+                    newInfo[attr] = formData[attr];
                 }
             }
-
             if (Object.keys(newInfo).length > 0) {
                 this.setState({
-                    message: <Message content="Updating acocunt..." />
+                    message: <Message content="Updating product..." />
                 });
 
-                WebService.adminUpdateProduct(AuthService.getTokenUnsafe(), this.props.formData.id, newInfo)
-                    .then(res => {
-                        const resObj = JSON.parse(res);
-                        if (resObj.status === ACTIVE_TYPE.TRUE) {
-                            this.setState({
-                                message: <Message color="green" content="Update product successfully" />
-                            });
+                WebService.adminUpdateProduct(AuthService.getTokenUnsafe(), formData.id, newInfo).then(res => {
+                    const resObj = JSON.parse(res);
+                    console.log(resObj);
+                    if (resObj.status === ACTIVE_TYPE.TRUE) {
+                        this.setState({
+                            message: <Message color="green" content="Update product successfully" />
+                        });
 
-
-                            resolve(true);
-                            if ('permission' in newInfo && this.props.formData.productName === this.props.productName) {
-                                window.location.reload();
-                            } else {
-                                this.fetchProducts(this.props.currentPage, this.props.pageSize, this.props.query);
-                            }
+                        resolve(true);
+                        if ("permission" in newInfo && formData.product_name === productName) {
+                            window.location.reload();
                         } else {
-                            this.setState({
-                                message: <Message color="red" content={resObj.message} />
-                            });
-                            console.log('UPDATE FAILED', resObj);
-                            resolve(false);
+                            this.fetchProducts(currentPage, pageSize, query);
                         }
-                    });
+                    } else {
+                        this.setState({
+                            message: <Message color="red" content={resObj.message} />
+                        });
+                        console.log("UPDATE FAILED", resObj);
+                        resolve(false);
+                    }
+                });
             } else {
                 resolve(false);
                 this.setState({
-                    message: 'Nothing to update'
+                    message: <Message content="Nothing to update.." />
                 });
             }
         });
-    }
+    };
 
-    handleAddProduct() {
+    handleAddProduct = () => {
+        const { formData, currentPage, pageSize, query } = this.props;
+
         return new Promise((resolve, reject) => {
             this.setState({
-                message: <Message content="Creating acocunt..." />
+                message: <Message content="Creating product..." />
             });
 
-            if (!this.props.formData.productName) {
+            if (!formData.product_name) {
                 this.setState({
                     message: <Message color="red" content="Product Name is empty" />
                 });
-            } else if (!this.props.formData.price) {
+            } else if (!formData.price) {
                 this.setState({
                     message: <Message color="red" content="Price is invalid" />
                 });
-            } else if (!this.props.formData.amount) {
+            } else if (!formData.amount) {
                 this.setState({
                     message: <Message color="red" content="Amount is invalid" />
                 });
-            } else if (!this.props.formData.images) {
+            } else if (!formData.images) {
                 this.setState({
                     message: <Message color="red" content="Images is empty" />
                 });
             } else {
-                WebService.adminInsertProduct(AuthService.getTokenUnsafe(), this.props.formData)
-                    .then(res => {
-                        const resObj = JSON.parse(res);
-                        if (resObj.status === ACTIVE_TYPE.TRUE) {
-                            this.setState({
-                                message: <Message color="green" content="Create product successfully" />
-                            });
+                WebService.adminInsertProduct(AuthService.getTokenUnsafe(), formData).then(res => {
+                    const resObj = JSON.parse(res);
+                    if (resObj.status === ACTIVE_TYPE.TRUE) {
+                        this.setState({
+                            message: <Message color="green" content="Create product successfully" />
+                        });
 
-                            resolve(true);
-                            this.fetchProducts(this.props.currentPage, this.props.pageSize, this.props.query);
-                        } else {
-                            this.setState({
-                                message: <Message color="red" content={resObj.message} />
-                            });
-                            console.log('ADD FAILED', resObj);
-                            resolve(false);
-                        }
-                    });
+                        resolve(true);
+                        this.fetchProducts(currentPage, pageSize, query);
+                    } else {
+                        this.setState({
+                            message: <Message color="red" content={resObj.message} />
+                        });
+                        console.log("ADD FAILED", resObj);
+                        resolve(false);
+                    }
+                });
             }
         });
-    }
+    };
 
-    handleDeleteProduct() {
+    handleDeleteProduct = () => {
         return new Promise(resolve => {
             if (this.productToBlock && this.productToBlock.id) {
                 WebService.adminUpdateProduct(AuthService.getTokenUnsafe(), this.productToBlock.id, {
@@ -385,7 +366,14 @@ class AdminProduct extends React.Component {
                     const resObj = JSON.parse(res);
                     if (resObj.status === ACTIVE_TYPE.TRUE) {
                         this.setState({
-                            message: <Message color="green" content={(this.productToBlock.active === ACTIVE_TYPE.TRUE ? 'Block' : 'Unblock') + "product successfully"} />
+                            message: (
+                                <Message
+                                    color="green"
+                                    content={
+                                        (this.productToBlock.active === ACTIVE_TYPE.TRUE ? "Block" : "Unblock") + "product successfully"
+                                    }
+                                />
+                            )
                         });
 
                         resolve(true);
@@ -394,17 +382,17 @@ class AdminProduct extends React.Component {
                         this.setState({
                             message: <Message color="red" content={resObj.message} />
                         });
-                        console.log('UPDATE BLOCK STATUS FAILED', resObj);
+                        console.log("UPDATE BLOCK STATUS FAILED", resObj);
                         resolve(false);
                     }
                 });
             }
         });
-    }
+    };
 
-    generateTableRows(products) {
+    generateTableRows = products => {
         let r = [];
-
+        if (!products || products.length === 0) return;
         products.forEach((product, id) => {
             let productImages;
             try {
@@ -412,32 +400,50 @@ class AdminProduct extends React.Component {
             } catch (e) {
                 productImages = [];
             }
-
             let randomStr = HelperTool.generateRandomString();
             r.push(
                 <Fragment key={id}>
                     <tr>
                         <td>{product.id}</td>
-                        <td>{product.productName}</td>
+                        <td>{product.product_name}</td>
                         <td>{HelperTool.withCommas(product.price)} ₫</td>
                         <td>{product.amount}</td>
-                        <td>{product.brand.brandName}</td>
-                        <td>{`${product.category.categoryName}, ${product.branch.branchName}, ${product.industry.industryName}`}</td>
-                        <td>{product.active === ACTIVE_TYPE.TRUE ? <i className="fa fa-check"></i> : <i className="fa fa-times-circle"></i>}</td>
+                        <td>{product.brand.brand_name}</td>
+                        <td>{`${product.category.category_name}, ${product.branch.branch_name}, ${product.industry.industry_name}`}</td>
+                        <td>
+                            {product.active === ACTIVE_TYPE.TRUE ? <i className="fa fa-check" /> : <i className="fa fa-times-circle" />}
+                        </td>
                         <td>
                             <div className="btn-group">
-                                <button className="btn btn-info btn-sm" type="button" data-toggle="collapse" data-target={"#detailbox" + randomStr} aria-expanded="false" aria-controls="collapseExample">
-                                    <i className="fa fa-info-circle"></i> Detail
+                                <button
+                                    className="btn btn-info btn-sm"
+                                    type="button"
+                                    data-toggle="collapse"
+                                    data-target={"#detailbox" + randomStr}
+                                    aria-expanded="false"
+                                    aria-controls="collapseExample"
+                                >
+                                    <i className="fa fa-info-circle" /> Detail
                                 </button>
-                                <button className="btn btn-warning btn-sm" data-toggle="modal" data-target="#update-product-modal"
+                                &#160;&#160;
+                                <button
+                                    className="btn btn-warning btn-sm"
+                                    data-toggle="modal"
+                                    data-target="#update-product-modal"
                                     onClick={() => this.prepareFormData({ ...product })}
                                 >
-                                    <i className="fa fa-pencil-square-o"></i> Edit
+                                    <i className="fa fa-pencil-square-o" /> Edit
                                 </button>
-                                <button className="btn btn-danger btn-sm" data-toggle="modal" data-target="#delete-product-modal"
-                                    onClick={() => { this.productToBlock = product; }}
+                                &#160;&#160;
+                                <button
+                                    className="btn btn-danger btn-sm"
+                                    data-toggle="modal"
+                                    data-target="#delete-product-modal"
+                                    onClick={() => {
+                                        this.productToBlock = product;
+                                    }}
                                 >
-                                    <i className="fa fa-ban"></i> {product.active === ACTIVE_TYPE.TRUE ? 'Block' : 'Unblock'}
+                                    <i className="fa fa-ban" /> {product.active === ACTIVE_TYPE.TRUE ? "Block" : "Unblock"}
                                 </button>
                             </div>
                         </td>
@@ -446,16 +452,18 @@ class AdminProduct extends React.Component {
                     {/* ROW DETAIL */}
                     <tr className="collapse no-hover" id={"detailbox" + randomStr}>
                         <td colSpan={INTERNAL_CONFIG.MAIN_HEADERS.length}>
-                            <div className="card card-body" style={{ 'border': 'none' }}>
+                            <div className="card card-body" style={{ border: "none" }}>
                                 <table className="table table-sm">
-                                    <thead>
-                                        {HelperTool.generateTableHeaders(INTERNAL_CONFIG.DETAIL_HEADERS)}
-                                    </thead>
+                                    <thead>{HelperTool.generateTableHeaders(INTERNAL_CONFIG.DETAIL_HEADERS)}</thead>
                                     <tbody>
                                         <tr>
                                             <td className="text-center">
-                                                {productImages.map((imgUrl, idx) => <img key={idx} src={imgUrl} className="m-1" alt="NONE" style={{ width: 54 }} />)}
-                                                <button><i className="fa fa-plus-circle"></i></button>
+                                                {productImages.map((imgUrl, idx) => (
+                                                    <img key={idx} src={imgUrl} className="m-1" alt="NONE" style={{ width: 54 }} />
+                                                ))}
+                                                <button>
+                                                    <i className="fa fa-plus-circle" />
+                                                </button>
                                             </td>
                                             <td>{product.description}</td>
                                         </tr>
@@ -465,13 +473,15 @@ class AdminProduct extends React.Component {
                         </td>
                     </tr>
                 </Fragment>
-            )
+            );
         });
 
         return r;
-    }
+    };
 
-    render() {
+    render = () => {
+        const { products, currentPage, pageSize, query, totalItems } = this.props;
+        const { branches, brands, industries, categories, message, showLoadingBar } = this.state;
         return (
             <div className="container-fluid">
                 <Modal
@@ -479,10 +489,10 @@ class AdminProduct extends React.Component {
                     modalTitle="Create new product"
                     modalBody={
                         <AdminAddProduct
-                            brands={this.state.brands}
-                            industries={this.state.industries}
-                            branches={this.state.branches}
-                            categories={this.state.categories}
+                            brands={brands}
+                            industries={industries}
+                            branches={branches}
+                            categories={categories}
                             changeIndustryHandler={this.handleIndustryChange}
                             changeBranchHandler={this.handleBranchChange}
                         />
@@ -490,7 +500,7 @@ class AdminProduct extends React.Component {
                     modalHandleSubmit={this.handleAddProduct}
                     modalSubmitTitle="Add"
                     modalSubmitClassName="btn-success"
-                    modalMessage={this.state.message}
+                    modalMessage={message}
                 />
                 <Modal
                     modalId="update-product-modal"
@@ -498,10 +508,10 @@ class AdminProduct extends React.Component {
                     modalBody={
                         <AdminAddProduct
                             editMode={true}
-                            brands={this.state.brands}
-                            industries={this.state.industries}
-                            branches={this.state.branches}
-                            categories={this.state.categories}
+                            brands={brands}
+                            industries={industries}
+                            branches={branches}
+                            categories={categories}
                             changeIndustryHandler={this.handleIndustryChange}
                             changeBranchHandler={this.handleBranchChange}
                         />
@@ -509,7 +519,7 @@ class AdminProduct extends React.Component {
                     modalHandleSubmit={this.handleUpdateProduct}
                     modalSubmitTitle="Update"
                     modalSubmitClassName="btn-warning"
-                    modalMessage={this.state.message}
+                    modalMessage={message}
                 />
                 <Modal
                     modalId="delete-product-modal"
@@ -523,18 +533,22 @@ class AdminProduct extends React.Component {
                 <hr />
                 <div className="card">
                     <div className="card-header d-flex justify-content-end">
-                        <input className="search-bar form-control col-md-4 col-sm-6" type="text" placeholder="Search for something..."
-                            value={this.props.query.keyword}
-                            onChange={(e) => this.handleChangeKeyword(e)}
-                            onKeyDown={(e) => e.keyCode === 13 && this.handleSearch()}
+                        <input
+                            className="search-bar form-control col-md-4 col-sm-6"
+                            type="text"
+                            placeholder="Search for something..."
+                            value={query.keyword}
+                            onChange={e => this.handleChangeKeyword(e)}
+                            onKeyDown={e => e.keyCode === 13 && this.handleSearch()}
                         />
                     </div>
                     <div className="card-body">
                         <div className="controllers d-flex">
                             <div>
-                                <select className="form-control input-sm"
-                                    value={this.props.pageSize}
-                                    onChange={(e) => {
+                                <select
+                                    className="form-control input-sm"
+                                    value={pageSize}
+                                    onChange={e => {
                                         this.handleFilterChange({
                                             pageSize: e.target.value
                                         });
@@ -548,38 +562,52 @@ class AdminProduct extends React.Component {
                             </div>
                             <div className="control-buttons btn-group justify-content-space-between">
                                 {/* <!-- Button trigger modal --> */}
-                                <button className="btn btn-success" data-toggle="modal" data-target="#add-product-modal"
+                                <button
+                                    className="btn btn-success"
+                                    data-toggle="modal"
+                                    data-target="#add-product-modal"
                                     onClick={() => {
                                         this.clearFormData();
                                     }}
                                 >
-                                    <i className="fa fa-plus-circle mr-2"></i>Add product
+                                    <i className="fa fa-plus-circle mr-2" />
+                                    Add product
                                 </button>
                             </div>
                         </div>
                         <div className="d-flex justify-content-between">
-                            <span>Display {((this.props.pageSize * this.props.currentPage) > this.props.totalItems) ? this.props.totalItems : (this.props.pageSize * this.props.currentPage)} / {this.props.totalItems}</span>
-                            {/* <span>{this.state.message}</span> */}
+                            <span>
+                                Display {pageSize * currentPage > totalItems ? totalItems : pageSize * currentPage} / {totalItems}
+                            </span>
+                            <span>{message}</span>
                         </div>
-                        <div className="table-container" style={{ position: 'relative' }}>
-                            <div className="progress" style={{ width: '100%', height: 5, position: 'absolute' }} hidden={this.state.showLoadingBar ? "" : "hidden"}>
-                                <div className="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style={{ "width": "100%" }}></div>
+                        <div className="table-container" style={{ position: "relative" }}>
+                            <div
+                                className="progress"
+                                style={{ width: "100%", height: 5, position: "absolute" }}
+                                hidden={showLoadingBar ? "" : "hidden"}
+                            >
+                                <div
+                                    className="progress-bar progress-bar-striped progress-bar-animated bg-success"
+                                    role="progressbar"
+                                    aria-valuenow="75"
+                                    aria-valuemin="0"
+                                    aria-valuemax="100"
+                                    style={{ width: "100%" }}
+                                />
                             </div>
-                            <div className="table-container table-responsive" >
+                            <div className="table-container table-responsive">
                                 <table className="table table-hover table-sm table-bordered">
-                                    <thead className="">
-                                        {HelperTool.generateTableHeaders(INTERNAL_CONFIG.MAIN_HEADERS)}
-                                    </thead>
-                                    <tbody>
-                                        {this.generateTableRows(this.props.products)}
-                                    </tbody>
+                                    <thead>{HelperTool.generateTableHeaders(INTERNAL_CONFIG.MAIN_HEADERS)}</thead>
+                                    <tbody>{this.generateTableRows(products)}</tbody>
                                 </table>
-
                                 <Paginator
-                                    handlePageChange={(currentPage) => { this.handleFilterChange({ currentPage }) }}
-                                    currentPage={this.props.currentPage}
-                                    pageSize={this.props.pageSize}
-                                    totalItems={this.props.totalItems}
+                                    handlePageChange={currentPage => {
+                                        this.handleFilterChange({ currentPage });
+                                    }}
+                                    currentPage={currentPage}
+                                    pageSize={pageSize}
+                                    totalItems={totalItems}
                                 />
                             </div>
                         </div>
@@ -587,8 +615,7 @@ class AdminProduct extends React.Component {
                 </div>
             </div>
         );
-    }
+    };
 }
-
 
 export default AdminProduct;

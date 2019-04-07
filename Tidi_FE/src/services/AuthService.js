@@ -1,14 +1,13 @@
 // Internal Dependencies
-import Types from "../pages/common/duck/types";
+// import Types from "../pages/common/duck/types";
 import ws from "./WebService";
 import jwtDecode from "jwt-decode";
 import TokenApi from "./TokenApi";
-import * as ActionsAuth from "../pages/common/duck/actions";
-
-const loginSuccess = payload => ({
-    type: Types.UPDATE_AUTH_STATUS,
-    payload
-});
+import { USER_TYPE } from "./../config/constants";
+// const loginSuccess = payload => ({
+//     type: Types.UPDATE_AUTH_STATUS,
+//     payload
+// });
 export default {
     verifyToken: changeLoginStatus => {
         if (!localStorage.getItem("authToken")) {
@@ -48,12 +47,51 @@ export default {
         }
     },
 
+    verifyTokenAdmin: () => {
+        if (!localStorage.getItem("authToken")) {
+            if (!localStorage.getItem("refreshToken")) {
+                localStorage.removeItem("authToken");
+                localStorage.removeItem("refreshToken");
+                return false;
+            }
+            TokenApi.postVerifyRefreshToken()
+                .then(res => {
+                    const { permission } = jwtDecode(res.access_token).user;
+                    localStorage.setItem(res.access_token);
+                    console.log(jwtDecode(res.access_token));
+                    if (permission === USER_TYPE.ADMIN) return true;
+                    return true;
+                })
+                .catch(err => {
+                    localStorage.removeItem("authToken");
+                    localStorage.removeItem("refreshToken");
+                    return false; // dispatch(logoutAction());
+                });
+            return true;
+        }
+        try {
+            TokenApi.postVerifyToken()
+                .then(resp => {
+                    if (resp.permission === USER_TYPE.ADMIN) return true;
+                    return false;
+                })
+                .catch(error => {
+                    localStorage.removeItem("authToken");
+                    localStorage.removeItem("refreshToken");
+                    return false;
+                });
+            return true;
+        } catch (e) {
+            localStorage.removeItem("authToken");
+            return false;
+        }
+        // return true;
+    },
     login: (username, password) => {
         return new Promise((resolve, reject) => {
             ws.login(username, password)
                 .then(res => {
                     let auth = JSON.parse(res);
-                    console.log(auth);
                     if (auth.auth === true && auth.authToken && auth.refreshToken) {
                         localStorage.setItem("authToken", auth.authToken);
                         localStorage.setItem("refreshToken", auth.refreshToken);

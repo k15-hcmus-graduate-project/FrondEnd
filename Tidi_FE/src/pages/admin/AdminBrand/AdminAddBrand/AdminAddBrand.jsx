@@ -1,38 +1,34 @@
 // Stylesheet
-import './AdminAddBrand.scss';
+import React, { Component } from "react";
+import "./AdminAddBrand.scss";
+import PropTypes from "prop-types";
+import FormInput from "../../../common/FormInput";
 
-// External dependencies
-import React from 'react';
-import PropTypes from 'prop-types';
-
-// Internal dependencies
-import FormInput from '../../../common/FormInput';
-
-
-class AdminAddBrand extends React.Component {
+class AdminAddBrand extends Component {
     static propTypes = {
         updateForm: PropTypes.func,
         editMode: PropTypes.bool
-    }
+    };
 
-    render() {
+    render = () => {
         return (
             <div>
-                <form >
+                <form>
                     {/* PRODUCTNAME */}
                     <FormInput
                         label="Brand Name"
                         type="text"
-                        value={this.props.formData.brandName}
-                        onChangeHandler={(e) => {
+                        value={this.props.formData.brand_name}
+                        onChangeHandler={e => {
                             this.props.updateForm({
-                            brandName: e.target.value
-                        })}}
+                                brand_name: e.target.value
+                            });
+                        }}
                     />
                 </form>
             </div>
         );
-    }
+    };
 }
 
 export default AdminAddBrand;

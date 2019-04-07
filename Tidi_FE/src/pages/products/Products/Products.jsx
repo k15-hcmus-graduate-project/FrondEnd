@@ -9,7 +9,7 @@ import AuthService from "../../../services/AuthService";
 import { ROUTE_NAME } from "../../../routes/main.routing";
 import { showAlert } from "../../../helpers/lib";
 import { withCommas } from "../../../helpers/lib";
-import { QUERY_PARAMS } from "../../../config/constants";
+import { QUERY_PARAMS, ACTIVE_TYPE } from "../../../config/constants";
 import SearchPanel from "../SearchPanel";
 import Paginator from "../../common/Paginator";
 import LoadingBar from "../../common/LoadingBar";
@@ -176,7 +176,7 @@ class Products extends Component {
                     showLoadingBar: false
                 });
                 const result = JSON.parse(res);
-                // console.log(result);
+                console.log("after update product: ", result);
                 if (result.products) {
                     this.props.updateProductList(result.products.map(prd => ({ ...prd, images: JSON.parse(prd.images) })));
                     this.props.changePageInfo({ totalItems: result.totalItems });
@@ -191,12 +191,9 @@ class Products extends Component {
 
     fetchCartProducts = () => {
         const { isLoggedIn } = this.props;
-        console.log(isLoggedIn);
         if (isLoggedIn) {
-            console.log("update thoi nao");
             WebService.getCart(AuthService.getTokenUnsafe()).then(res => {
                 const result = JSON.parse(res);
-                console.log(result);
                 if (result.status === true) {
                     if (result.products) {
                         result.products.forEach(prd => (prd.images = JSON.parse(prd.images)));
@@ -208,7 +205,6 @@ class Products extends Component {
     };
 
     handleAddProductToCart = product => {
-        console.log(product);
         const { isLoggedIn, cart } = this.props;
         if (isLoggedIn) {
             const currentCartItems = cart.products;
@@ -218,6 +214,7 @@ class Products extends Component {
                     if (cartItem.id === product.id) {
                         cartItemAmount = cartItem.amount;
                     }
+                    return null;
                 });
                 cartItemAmount += 1;
                 WebService.addItemToCart(AuthService.getTokenUnsafe(), product.id, cartItemAmount).then(r => {
@@ -261,19 +258,20 @@ class Products extends Component {
 
     generateProducts = () => {
         const { products } = this.props;
-        console.log(products);
         const productsElements = [];
 
         products.map((product, index) => {
-            productsElements.push(
-                <Product
-                    // key={product.id}
-                    key={index}
-                    product={product}
-                    buttonTitle="Add to cart"
-                    onClickHandler={this.handleAddProductToCart}
-                />
-            );
+            if (product.active !== ACTIVE_TYPE.FALSE)
+                return productsElements.push(
+                    <Product
+                        // key={product.id}
+                        key={index}
+                        product={product}
+                        buttonTitle="Add to cart"
+                        onClickHandler={this.handleAddProductToCart}
+                    />
+                );
+            return null;
         });
 
         return productsElements;
@@ -388,7 +386,6 @@ class Product extends Component {
         const { product, onClickHandler, buttonTitle } = this.props;
         if (!product) return "";
         const discountedPrice = Math.round(product.price - product.price * product.discPercent);
-        // const productImages = JSON.parse(product.images);
         return (
             <div className="col-12 col-sm-6 col-lg-4">
                 <div className="single-product-wrapper">

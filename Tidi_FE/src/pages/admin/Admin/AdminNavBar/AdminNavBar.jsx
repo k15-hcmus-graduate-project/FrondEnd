@@ -1,69 +1,87 @@
 // Stylesheet
-import './AdminNavBar.scss';
-
-// External dependencies
-import React from 'react';
-import { Link, Redirect } from 'react-router-dom';
-import PropTypes from 'prop-types';
-
-// Internal dependencies
-import AuthService from '../../../../services/AuthService';
-import { ROUTE_NAME } from '../../../../routes/main.routing';
-
-
+import React, { Component } from "react";
+import { Link, Redirect } from "react-router-dom";
+import PropTypes from "prop-types";
+import "./AdminNavBar.scss";
+import AuthService from "../../../../services/AuthService";
+import { ROUTE_NAME } from "../../../../routes/main.routing";
 const INTIAL_STATE = {
     redirectTo: null
-}
+};
 
-class AdminNavBar extends React.Component {
+class AdminNavBar extends Component {
     static propTypes = {
         username: PropTypes.string
-    }
+    };
 
-    constructor(props) {
+    constructor(props: any) {
         super(props);
-
         this.state = INTIAL_STATE;
     }
-
-    logout() {
-        AuthService.logout();
+    componentWillMount = () => {
+        var verify = AuthService.verifyTokenAdmin();
+        if (!verify) {
+            this.logout();
+        }
+    };
+    logout = () => {
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("refreshTokenToken");
         this.setState({
             redirectTo: <Redirect to={ROUTE_NAME.LOGIN} />
         });
-    }
+    };
 
-    render() {
+    render = () => {
+        const { username, location } = this.props;
         return (
             <div className="nav-side-menu">
                 {this.state.redirectTo}
-                <h1 className="brand"><Link to={ROUTE_NAME.ADMIN.HOME}>ADMIN</Link><small><Link to={ROUTE_NAME.HOME}> TIDI</Link></small></h1>
-                <p className="text-center">Hello, <strong>{this.props.username}</strong></p>
-                <p className="text-center"><a href="#/" onClick={() => this.logout()}>Logout</a></p>
-                <i className="fa fa-bars fa-2x toggle-btn" data-toggle="collapse" data-target="#menu-content"></i>
+                <h1 className="brand">
+                    <Link to={ROUTE_NAME.ADMIN.HOME}>ADMIN</Link>
+                    <small>
+                        <Link to={ROUTE_NAME.HOME}> TIDI</Link>
+                    </small>
+                </h1>
+                <p className="text-center">
+                    Hello, <strong>{username}</strong>
+                </p>
+                <p className="text-center">
+                    <button onClick={() => this.logout()}>Logout</button>
+                </p>
+                <i className="fa fa-bars fa-2x toggle-btn" data-toggle="collapse" data-target="#menu-content" />
 
                 <div className="menu-list">
-
                     <ul id="menu-content" className="menu-content collapse out">
                         <li>
                             <a href="/">
-                                <i className="fa fa-dashboard fa-lg"></i> Dashboard
+                                <i className="fa fa-dashboard fa-lg" /> Dashboard
                             </a>
                         </li>
                         <li data-toggle="collapse" data-target="#products" className="show active">
-                            <a href="/"><i className="fa fa-briefcase fa-lg"></i> Management <span className="arrow"></span></a>
+                            <a href="/">
+                                <i className="fa fa-briefcase fa-lg" /> Management <span className="arrow" />
+                            </a>
                         </li>
                         <ul className="sub-menu collapse show" id="products">
-                            <li className={this.props.location.pathname === ROUTE_NAME.ADMIN.USER ? "active" : ""}><Link to={ROUTE_NAME.ADMIN.USER}>User</Link></li>
-                            <li className={this.props.location.pathname === ROUTE_NAME.ADMIN.PRODUCT ? "active" : ""}><Link to={ROUTE_NAME.ADMIN.PRODUCT}>Product</Link></li>
-                            <li className={this.props.location.pathname === ROUTE_NAME.ADMIN.ORDER ? "active" : ""}><Link to={ROUTE_NAME.ADMIN.ORDER}>Order</Link></li>
-                            <li className={this.props.location.pathname === ROUTE_NAME.ADMIN.BRAND ? "active" : ""}><Link to={ROUTE_NAME.ADMIN.BRAND}>Brand</Link></li>
+                            <li className={location.pathname === ROUTE_NAME.ADMIN.USER ? "active" : ""}>
+                                <Link to={ROUTE_NAME.ADMIN.USER}>User</Link>
+                            </li>
+                            <li className={location.pathname === ROUTE_NAME.ADMIN.PRODUCT ? "active" : ""}>
+                                <Link to={ROUTE_NAME.ADMIN.PRODUCT}>Product</Link>
+                            </li>
+                            <li className={location.pathname === ROUTE_NAME.ADMIN.ORDER ? "active" : ""}>
+                                <Link to={ROUTE_NAME.ADMIN.ORDER}>Order</Link>
+                            </li>
+                            <li className={location.pathname === ROUTE_NAME.ADMIN.BRAND ? "active" : ""}>
+                                <Link to={ROUTE_NAME.ADMIN.BRAND}>Brand</Link>
+                            </li>
                         </ul>
                     </ul>
                 </div>
             </div>
         );
-    }
+    };
 }
 
 export default AdminNavBar;

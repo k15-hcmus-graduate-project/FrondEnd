@@ -3,11 +3,10 @@ import React, { Component } from "react";
 import Swal from "sweetalert2";
 import { Redirect } from "react-router-dom";
 import PropTypes from "prop-types";
-import QRCode from "qrcode";
 import "./CheckoutDetail.scss";
 import WebService from "../../../services/WebService";
 import AuthService from "../../../services/AuthService";
-import CONSTANT, { PAYMENT_METHOD, ACTIVE_TYPE, ZP_ORDER_STATUS } from "../../../config/constants";
+import { PAYMENT_METHOD, ACTIVE_TYPE } from "../../../config/constants";
 import { ROUTE_NAME } from "../../../routes/main.routing";
 import LIB, { withCommas } from "../../../helpers/lib";
 import FormInput from "../../common/FormInput";
@@ -49,7 +48,7 @@ class CheckoutDetail extends Component {
         handleOnSelect: PropTypes.func
     };
 
-    constructor(props) {
+    constructor(props: any) {
         super(props);
 
         this.state = INITIAL_STATE;
@@ -66,16 +65,15 @@ class CheckoutDetail extends Component {
     };
 
     fetchCartProducts = () => {
-        const { isLoggedIn } = this.props;
+        const { isLoggedIn, updateCartProducts } = this.props;
         if (isLoggedIn) {
             return WebService.getCart(AuthService.getTokenUnsafe()).then(res => {
                 const result = JSON.parse(res);
-
                 if (result.status === true) {
                     if (result.products) {
                         result.products.forEach(prd => (prd.images = JSON.parse(prd.images)));
                     }
-                    this.props.updateCartProducts(result.products);
+                    updateCartProducts(result.products);
                 }
             });
         } else {
@@ -84,9 +82,9 @@ class CheckoutDetail extends Component {
     };
 
     fetchUserInfo = () => {
+        const { address, phoneNumber } = this.state;
         WebService.readAccountInfo(AuthService.getTokenUnsafe()).then(response => {
             let res = JSON.parse(response);
-            console.log(res);
             if (res.status === true) {
                 this.setState({
                     fullName: res.fullName ? res.fullName : "",
@@ -94,63 +92,13 @@ class CheckoutDetail extends Component {
                     phoneNumber: res.phone ? res.phone : "",
                     email: res.email ? res.email : ""
                 });
-                if (this.state.address === "") this.setState({ addressIsInvalid: true });
-                if (this.state.phoneNumber === "") this.setState({ phoneNumberIsInvalid: true });
+                if (address === "") this.setState({ addressIsInvalid: true });
+                if (phoneNumber === "") this.setState({ phoneNumberIsInvalid: true });
             } else {
-                console.err("Retrieve User info failed");
+                this.setState({
+                    redirectTo: <Redirect to={ROUTE_NAME.PRODUCTS} />
+                });
             }
-        });
-    };
-
-    generateQRCode = orderInfo => {
-        if (!this.zptranstoken) {
-            console.log("zptranstoken is null");
-        }
-
-        return new Promise((resolve, reject) => {
-            QRCode.toDataURL(
-                JSON.stringify({
-                    appid: CONSTANT.APPID,
-                    zptranstoken: this.zptranstoken
-                }),
-                (err, url) => {
-                    if (err) {
-                        console.log(err);
-                    } else {
-                        Swal({
-                            title: "Zalopay Payment",
-                            text: "Use your Zalopay App to scan this QR-Code",
-                            imageUrl: url,
-                            // imageWidth: 400,
-                            // imageHeight: 200,
-                            imageAlt: "QR Code",
-                            animation: true,
-                            allowOutsideClick: false,
-                            allowEscapeKey: false,
-                            allowEnterKey: false,
-                            showCancelButton: false,
-                            showConfirmButton: true,
-                            confirmButtonText: "Cancel",
-                            confirmButtonColor: "gray",
-
-                            preConfirm: () => {
-                                if (window.confirm("Are you sure?")) {
-                                    if (this.checkStatusInterval) {
-                                        clearInterval(this.checkStatusInterval);
-                                    }
-
-                                    return true;
-                                }
-                                return false;
-                            },
-
-                            onClose: () => {
-                                resolve(false);
-                            }
-                        });
-                    }
-                }
-            );
         });
     };
 
@@ -161,12 +109,10 @@ class CheckoutDetail extends Component {
             const { cartItems } = this.props;
             if (cartItems) {
                 cartItems.map(item => {
-                    products.push({ proID: item.id, amount: item.amount });
+                    return products.push({ proID: item.id, price: item.price, amount: item.amount });
                 });
             }
             const { couponCode, fullName, phoneNumber, email, address, shippingNote, shippingMethod } = this.state;
-            console.log(couponCode);
-            console.log(this.total, this.discountTotal);
             WebService.toCheckout(
                 AuthService.getTokenUnsafe(),
                 couponCode,
@@ -182,87 +128,16 @@ class CheckoutDetail extends Component {
             )
                 .then(res => {
                     const result = JSON.parse(res);
-                    const orderID = result.orderId;
-                    if (result.status.status === ACTIVE_TYPE.TRUE) {
-                        // Get zptranstoken if payment method is Zalopay
-                        // if (this.state.shippingMethod.NAME === PAYMENT_METHOD[0].NAME) {
-                        //     const checkOrderZPInterval = setInterval(() => {
-                        //         WebService.getZPTokenFromOrder(AuthService.getTokenUnsafe(), result.orderId).then(res => {
-                        //             const result = JSON.parse(res);
-
-                        //             if (result.status.status !== ACTIVE_TYPE.FALSE) {
-                        //                 if (result.status.status !== "PROCESSING") {
-                        //                     clearInterval(checkOrderZPInterval);
-
-                        //                     this.zalopayOrderId = result.orderId;
-                        //                     this.zptranstoken = result.zptranstoken;
-                        //                     resolve({
-                        //                         status: true,
-                        //                         payload: result
-                        //                     });
-
-                        //                     // Check order status
-
-                        //                     let checkStatusInterval = setInterval(() => {
-                        //                         WebService.getZalopayOrderStatus(AuthService.getTokenUnsafe(), Number(orderID)).then(
-                        //                             res => {
-                        //                                 const result = JSON.parse(res);
-                        //                                 switch (result.status) {
-                        //                                     case ZP_ORDER_STATUS.PROCESSING:
-                        //                                         break;
-
-                        //                                     case ZP_ORDER_STATUS.CANCELED:
-                        //                                         Swal({
-                        //                                             type: "error",
-                        //                                             title: "No...",
-                        //                                             text: "Your payment has been canceled!"
-                        //                                         });
-                        //                                         break;
-
-                        //                                     case ZP_ORDER_STATUS.SUCCESSFUL:
-                        //                                         Swal({
-                        //                                             type: "success",
-                        //                                             title: "Yayy!!",
-                        //                                             text: `You ordered successfully.`,
-                        //                                             onClose: () => {
-                        //                                                 this.fetchCartProducts();
-                        //                                                 this.setState({
-                        //                                                     redirectTo: <Redirect to={ROUTE_NAME.PRODUCTS} />
-                        //                                                 });
-                        //                                             }
-                        //                                         });
-                        //                                         break;
-
-                        //                                     default:
-                        //                                         break;
-                        //                                 }
-                        //                                 if (result.status !== ZP_ORDER_STATUS.PROCESSING) {
-                        //                                     clearInterval(checkStatusInterval);
-                        //                                     clearInterval(checkOrderZPInterval);
-                        //                                 }
-                        //                             }
-                        //                         );
-                        //                     }, INTERNAL_CONFIG.INTERVAL_DURATION);
-                        //                 }
-                        //             } else {
-                        //                 clearInterval(checkOrderZPInterval);
-                        //                 resolve({
-                        //                     status: false,
-                        //                     message: result.status.message
-                        //                 });
-                        //             }
-                        //         });
-                        //     }, INTERNAL_CONFIG.INTERVAL_DURATION);
-                        // } else {
+                    console.log(result);
+                    if (result.status === ACTIVE_TYPE.TRUE) {
                         resolve({
                             status: true,
                             payload: result
                         });
-                        // }
                     } else {
                         resolve({
                             status: false,
-                            message: result.status.message,
+                            message: result.message,
                             payload: result
                         });
                     }
@@ -283,7 +158,6 @@ class CheckoutDetail extends Component {
         if (couponCode && couponStatusCode !== 1) {
             WebService.getCouponStatus(couponCode).then(res => {
                 const result = JSON.parse(res);
-                console.log(result);
                 let couponMessage = "";
                 switch (result.status) {
                     case -1:
@@ -355,27 +229,18 @@ class CheckoutDetail extends Component {
                     this.placeOrder().then(res => {
                         if (res.status === true) {
                             // Order on AppServer successfully
-                            if (shippingMethod.NAME !== PAYMENT_METHOD[0].NAME) {
-                                Swal({
-                                    type: "success",
-                                    title: "Yayy!!",
-                                    text: `You ordered successfully.`,
-                                    onClose: () => {
-                                        this.fetchCartProducts();
-                                        this.setState({
-                                            redirectTo: <Redirect to={ROUTE_NAME.PRODUCTS} />
-                                        });
-                                    }
-                                });
-                            } else {
-                                // Order using Zalopay
-                                this.generateQRCode(res.status.toString()).then(status => {
+                            console.log(PAYMENT_METHOD[0].NAME, shippingMethod.NAME);
+                            Swal({
+                                type: "success",
+                                title: "Yayy!!",
+                                text: `You ordered successfully.`,
+                                onClose: () => {
                                     this.fetchCartProducts();
                                     this.setState({
                                         redirectTo: <Redirect to={ROUTE_NAME.PRODUCTS} />
                                     });
-                                });
-                            }
+                                }
+                            });
                         } else {
                             console.log(res);
                             Swal({

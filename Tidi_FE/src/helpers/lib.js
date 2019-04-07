@@ -2,7 +2,8 @@ import React from "react";
 import swal from "sweetalert2";
 
 export const withCommas = x => {
-    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    if (x) return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return x;
 };
 
 export const generateRandomString = () => {
@@ -17,7 +18,6 @@ export const generateRandomString = () => {
 
 export const generateTableHeaders = cols => {
     let r = [];
-
     cols.forEach((header, id) => {
         r.push(
             <th scope="col" key={id}>

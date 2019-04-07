@@ -1,15 +1,16 @@
 // External dependencies
-import { connect } from 'react-redux';
+import { connect } from "react-redux";
+import Actions from "../../duck/actions";
+import AdminAddBrand from "./AdminAddBrand";
 
-// Internal dependencies
-import Actions from '../../duck/actions';
-import AdminAddBrand from './AdminAddBrand';
-
-const mapStateToProps = (state) => state.admin.AdminAddBrand;
-const mapDispatchToProps = (dispatch) => ({
-    updateForm: (newFormObj) => {
+const mapStateToProps = state => state.admin.AdminAddBrand;
+const mapDispatchToProps = dispatch => ({
+    updateForm: newFormObj => {
         dispatch(Actions.updateAddBrandForm(newFormObj));
-    },
+    }
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(AdminAddBrand);
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(AdminAddBrand);

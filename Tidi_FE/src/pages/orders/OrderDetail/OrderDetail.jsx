@@ -1,46 +1,33 @@
-// Stylsheet
-import './OrderDetail.scss';
+import React, { Component } from "react";
+import Moment from "moment";
+import PropTypes from "prop-types";
+import "./OrderDetail.scss";
+import AuthService from "../../../services/AuthService";
+import WebService from "../../../services/WebService";
+import { ACTIVE_TYPE } from "../../../config/constants";
+import { withCommas } from "../../../helpers/lib";
 
-// External dependencies
-import React from 'react';
-import Moment from 'moment';
-import PropTypes from 'prop-types';
-
-// Internal dependencies
-import AuthService from '../../../services/AuthService';
-import WebService from '../../../services/WebService';
-import { ACTIVE_TYPE } from '../../../config/constants';
-import { withCommas } from '../../../helpers/lib';
-
-
-class OrderDetail extends React.Component {
+class OrderDetail extends Component {
     static propTypes = {
         fetchOrderDetail: PropTypes.func,
         order: PropTypes.object,
         history: PropTypes.object
-    }
+    };
 
-    constructor(props) {
-        super(props);
-
-        this.fetchOrderDetail = this.fetchOrderDetail.bind(this);
-    }
-
-    componentWillMount() {
+    componentWillMount = () => {
         this.fetchOrderDetail(this.props.match.params.id);
-    }
+    };
 
-    fetchOrderDetail(orderId) {
+    fetchOrderDetail = orderId => {
         WebService.getOneOrder(AuthService.getTokenUnsafe(), orderId).then(res => {
             const result = JSON.parse(res);
-
-            if (result.status && result.status.status === ACTIVE_TYPE.TRUE) {
+            if (result.status && result.status === ACTIVE_TYPE.TRUE) {
                 this.props.fetchOrderDetail(result.order);
             }
         });
-    }
+    };
 
-    render() {
+    render = () => {
         return (
             <div>
                 <div className="breadcumb_area bg-img" style={{ backgroundImage: "url(/img/bg-img/breadcumb.jpg)" }}>
@@ -73,99 +60,96 @@ class OrderDetail extends React.Component {
                 {/* <!-- ##### OrderDetail Grid Area End ##### --> */}
             </div>
         );
-    }
+    };
 }
 
-class OrderInfo extends React.Component {
-    generateProductList(products) {
+class OrderInfo extends Component {
+    generateProductList = products => {
         let totalPrice = 0;
         let itemElements = products.map((product, index) => {
             let price = (product.price - product.price * product.discPercent) * product.amount;
-
             totalPrice += price;
-
             return (
                 <li key={index} className="item-product-name">
-                    <span>{`[${product.amount}] ${product.productName}`}</span>
+                    <span>{`[${product.amount}] ${product.product_name}`}</span>
                     <span>{`${withCommas(Math.round(price))} ₫`}</span>
                 </li>
             );
         });
-
         this.total = totalPrice;
         return itemElements;
-    }
+    };
 
-    render() {
-        const order = this.props.order;
+    render = () => {
+        const { order } = this.props;
+        console.log(order);
         return (
             <div className="col-12">
                 <div className="order-details-confirmation">
-                    {
-                        order.products ?
-                            <>
-                                <div className="cart-page-heading d-flex justify-content-between">
-                                    <div className="user-info">
-                                        <h5>{order.fullName}</h5>
-                                        <p>{`${order.email} - ${order.phone}`}</p>
-                                        <p>{`${order.address}`}</p>
-                                    </div>
-                                    <div className="order-status-container">
-                                        {order.status}
-                                    </div>
+                    {order.products ? (
+                        <>
+                            <div className="cart-page-heading d-flex justify-content-between">
+                                <div className="user-info">
+                                    <h5>{order.fullName}</h5>
+                                    <p>{`${order.email} - ${order.phone}`}</p>
+                                    <p>{`${order.address}`}</p>
                                 </div>
-                                <div>
-                                    <OrderHistoryTimeline history={order.history} />
-                                </div>
-                                <ul className="order-details-form mb-4">
-                                    <li className="item-header"><span>Product</span> <span>Price</span></li>
-                                    {this.generateProductList(order.products)}
-                                    {/* <li className="item-header"><span>Shipping</span> <span>{`FREE`}</span></li> */}
-                                    <li className="item-header"><span>Coupon used</span> <span>{order.couponId ? order.couponId : 'NONE'}</span></li>
+                                <div className="order-status-container">{order.status}</div>
+                            </div>
+                            <div>
+                                <OrderHistoryTimeline history={order.history} />
+                            </div>
+                            <ul className="order-details-form mb-4">
+                                <li className="item-header">
+                                    <span>Product</span> <span>Price</span>
+                                </li>
+                                {this.generateProductList(order.products)}
+                                {/* <li className="item-header"><span>Shipping</span> <span>{`FREE`}</span></li> */}
+                                <li className="item-header">
+                                    <span>Coupon used</span> <span>{order.coupon_id ? order.coupon_id : "NONE"}</span>
+                                </li>
 
-                                    <li className="total-header"><span>Total</span> <span>{`${withCommas(Math.round(order.total))} ₫`}</span></li>
-                                </ul>
+                                <li className="total-header">
+                                    <span>Total</span> <span>{`${withCommas(Math.round(order.total))} ₫`}</span>
+                                </li>
+                            </ul>
 
-                                <div id="accordion" role="tablist" className={"mb-4 form-control shipping-method-container"}>
-                                </div>
-                                <button className="btn essence-btn"
-                                >Export Bill</button>
-                            </>
-                            : <div className="text-center">Order not found</div>
-                    }
+                            <div id="accordion" role="tablist" className={"mb-4 form-control shipping-method-container"} />
+                            <button className="btn essence-btn">Export Bill</button>
+                        </>
+                    ) : (
+                        <div className="text-center">Order not found</div>
+                    )}
                 </div>
             </div>
         );
-    }
+    };
 }
 
-class OrderHistoryTimeline extends React.Component {
-
-    generateDiplome() {
-        const history = this.props.history;
-
-        return history.map((history, index) => {
-            let timestamp = Moment(history.date).format("D/M/YY").toString();
+class OrderHistoryTimeline extends Component {
+    generateDiplome = () => {
+        const { history } = this.props;
+        return history.map((item, index) => {
+            let timestamp = Moment(item.date_time)
+                .format("D/M/YY")
+                .toString();
             return (
                 <li key={index}>
-                    <p className="diplome">{history.status}</p>
-                    <span className="point"></span>
+                    <p className="diplome">{item.status}</p>
+                    <span className="point" />
                     <div className="diplome-date text-center">{timestamp}</div>
                 </li>
             );
-        })
-    }
+        });
+    };
 
-
-    render() {
+    render = () => {
         return (
             <div className="timeline-container">
-                <ol className="timeline">
-                    {this.generateDiplome()}
-                </ol>
+                <ol className="timeline">{this.generateDiplome()}</ol>
             </div>
         );
-    }
+    };
 }
 
 export default OrderDetail;
