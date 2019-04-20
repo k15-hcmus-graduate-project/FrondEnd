@@ -10,8 +10,12 @@ import { showAlert } from "../../../helpers/lib";
 import { withCommas } from "../../../helpers/lib";
 import Loader from "../../common/Loader/Loader";
 
+import { Parse, client } from "../../../helpers/parse";
+// const Parse = Pa.Parse;
+// const client = ;
+
 const INTITIAL_STATE = {
-    product: {},
+    product: null,
     productFound: false
 };
 
@@ -54,10 +58,23 @@ class ProductDetail extends Component {
         });
     };
 
-    componentDidMount() {
+    componentDidMount = () => {
+        var parseQuery = new Parse.Query("product");
+        const { id } = this.props.match.params.id;
+        parseQuery.equalTo("id", parseInt(id, 10));
+        const subscription = client.subscribe(parseQuery);
+        subscription.on("open", object => {
+            console.log("co nguoi moi xem.");
+            // row.amount = await object.get("amount");
+            // row.viewer = await object.get("viewer");
+            // console.log("Amount updated: " + row.amount);
+            // console.log("Viewers: " + row.viewer);
+            // console.log("return json result");
+            // res.json(row);
+        });
         // Activate the event listener
         this.setupBeforeUnloadListener();
-    }
+    };
     componentWillUnmount = () => {
         console.log("da roi khoi trang");
         console.log(this.state.product);
@@ -70,6 +87,7 @@ class ProductDetail extends Component {
         if (!isNaN(productId) && productId > 0) {
             WebService.getProduct(productId).then(res => {
                 const product = JSON.parse(res);
+                console.log(product);
                 if (product.status !== 500) {
                     product.images = JSON.parse(product.images);
                     this.setState({
@@ -162,6 +180,7 @@ class ProductDetail extends Component {
             }
             return (
                 <div className="single_product_details_area d-flex align-items-center">
+                    {!this.state.product && <Loader />}
                     <div id="images-slider" className="single_product_thumb carousel slide" data-ride="carousel">
                         <div className="carousel-inner">{this.generatePictures()}</div>
                         <a className="carousel-control-prev owl-prev" href="#images-slider" role="button" data-slide="prev">
