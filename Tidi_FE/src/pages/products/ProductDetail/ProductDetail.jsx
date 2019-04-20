@@ -39,6 +39,32 @@ class ProductDetail extends Component {
         }
     };
 
+    doSomethingBeforeUnload = () => {
+        WebService.descViewer(this.state.product.id).then(res => {
+            console.log("descrease viewer by one");
+        });
+    };
+
+    // Setup the `beforeunload` event listener
+    setupBeforeUnloadListener = () => {
+        window.addEventListener("beforeunload", ev => {
+            console.log("close windows");
+            ev.preventDefault();
+            return this.doSomethingBeforeUnload();
+        });
+    };
+
+    componentDidMount() {
+        // Activate the event listener
+        this.setupBeforeUnloadListener();
+    }
+    componentWillUnmount = () => {
+        console.log("da roi khoi trang");
+        console.log(this.state.product);
+        WebService.descViewer(this.state.product.id).then(res => {
+            console.log("descrease viewer by one");
+        });
+    };
     fetchProduct = () => {
         const productId = Number(this.props.match.params.id);
         if (!isNaN(productId) && productId > 0) {

@@ -21,6 +21,7 @@ export const API_USERS_CART = "/cart";
 // Product
 export const API_PRODUCT_INDUSTRY = "/product/industry";
 export const API_PRODUCT_BRAND = "/product/brand";
+export const API_PRODUCT_UPDATE_VIEWER = "/product/viewer";
 export const API_PRODUCT_ALL = "/product/all";
 export const API_PRODUCT_ADMIN_ALL = "/product/admin";
 export const API_PRODUCT_ADMIN_ADD = "/product/admin/add";

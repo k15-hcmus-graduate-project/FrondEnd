@@ -28,7 +28,8 @@ import {
     API_CHECKOUT_ADMIN_ORDER,
     API_CHECKOUT_ORDER,
     API_CHECKOUT_ORDER_UPDATE,
-    API_CHECKOUT_ORDERDETAIL
+    API_CHECKOUT_ORDERDETAIL,
+    API_PRODUCT_UPDATE_VIEWER
 } from "../config/AppConfig";
 
 const apiPrefix = {
@@ -123,6 +124,15 @@ export default {
                 username
             },
             route: apiPrefix.authentication + "/resetPassword"
+        });
+    },
+    descViewer: id => {
+        return fetch({
+            method: "PUT",
+            reqBody: {
+                id
+            },
+            route: API_PRODUCT_UPDATE_VIEWER
         });
     },
 

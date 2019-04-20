@@ -105,7 +105,6 @@ class SearchPanel extends Component {
                 elementContainer = collapsedElements;
             }
             const brand = brands[i];
-            console.log(brand);
             elementContainer.push(
                 <li key={i}>
                     {/* <a

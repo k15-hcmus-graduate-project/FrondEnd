@@ -34,7 +34,6 @@ class Products extends Component {
     constructor(props: any) {
         super(props);
         this.state = INTIAL_STATE;
-        this.handleAddProductToCart = this.handleAddProductToCart.bind(this);
     }
 
     componentDidMount = () => {
@@ -176,7 +175,6 @@ class Products extends Component {
                     showLoadingBar: false
                 });
                 const result = JSON.parse(res);
-                console.log("after update product: ", result);
                 if (result.products) {
                     this.props.updateProductList(result.products.map(prd => ({ ...prd, images: JSON.parse(prd.images) })));
                     this.props.changePageInfo({ totalItems: result.totalItems });
@@ -259,7 +257,7 @@ class Products extends Component {
     generateProducts = () => {
         const { products } = this.props;
         const productsElements = [];
-
+        console.log(products);
         products.map((product, index) => {
             if (product.active !== ACTIVE_TYPE.FALSE)
                 return productsElements.push(
