@@ -174,7 +174,6 @@ class AdminProduct extends Component<State> {
     fetchAllCategories = () => {
         WebService.adminGetAllCategories(AuthService.getTokenUnsafe(), 10000, 0, {}).then(res => {
             const result = JSON.parse(res);
-
             if (result.status && result.status === ACTIVE_TYPE.TRUE) {
                 this.originalCategories = result.categories;
                 this.handleBranchChange(this.props.formData.branch_id);

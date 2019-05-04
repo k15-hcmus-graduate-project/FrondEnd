@@ -9,23 +9,26 @@ import AuthService from "../../../services/AuthService";
 import { showAlert } from "../../../helpers/lib";
 import { withCommas } from "../../../helpers/lib";
 import Loader from "../../common/Loader/Loader";
-
 import { Parse, client } from "../../../helpers/parse";
-// const Parse = Pa.Parse;
-// const client = ;
 
 const INTITIAL_STATE = {
     product: null,
-    productFound: false
+    productFound: false,
+    numberOfViewer: 0,
+    refresh: true
 };
 
 class ProductDetail extends Component {
+    subscription;
+
     static propTypes = {
         isLoggedIn: PropTypes.bool,
         updateCartProducts: PropTypes.func,
         cart: PropTypes.shape({
             products: PropTypes.array
-        })
+        }),
+        decreaseViewer: PropTypes.bool,
+        descreaseViewAct: PropTypes.func
     };
 
     constructor(props: any) {
@@ -43,51 +46,61 @@ class ProductDetail extends Component {
         }
     };
 
-    doSomethingBeforeUnload = () => {
-        WebService.descViewer(this.state.product.id).then(res => {
-            console.log("descrease viewer by one");
-        });
+    doSomethingBeforeUnload = async () => {
+        await WebService.descViewer(this.state.product.id)
+            .then(res => {
+                console.log("descrease viewer successful");
+                client.unsubscribe(this.subscription);
+            })
+            .catch(err => {
+                console.log("cannot query from back4app: ", err);
+                client.unsubscribe(this.subscription);
+            });
     };
 
     // Setup the `beforeunload` event listener
     setupBeforeUnloadListener = () => {
-        window.addEventListener("beforeunload", ev => {
-            console.log("close windows");
+        window.addEventListener("beforeunload", async ev => {
+            console.log("decrease view props after change in before unload listener: ", this.props.decreaseViewer);
             ev.preventDefault();
-            return this.doSomethingBeforeUnload();
+            await this.doSomethingBeforeUnload();
         });
     };
 
     componentDidMount = () => {
         var parseQuery = new Parse.Query("product");
-        const { id } = this.props.match.params.id;
-        parseQuery.equalTo("id", parseInt(id, 10));
-        const subscription = client.subscribe(parseQuery);
-        subscription.on("open", object => {
-            console.log("co nguoi moi xem.");
-            // row.amount = await object.get("amount");
-            // row.viewer = await object.get("viewer");
-            // console.log("Amount updated: " + row.amount);
-            // console.log("Viewers: " + row.viewer);
-            // console.log("return json result");
-            // res.json(row);
+        this.subscription = client.subscribe(parseQuery);
+        const { id } = this.props.match.params;
+        this.subscription.on("update", object => {
+            if (object.id === id) {
+                this.setState({
+                    numberOfViewer: object.get("viewer")
+                });
+                console.log("The number of people watching this product: ", this.state.numberOfViewer);
+            }
         });
+
         // Activate the event listener
         this.setupBeforeUnloadListener();
     };
-    componentWillUnmount = () => {
-        console.log("da roi khoi trang");
-        console.log(this.state.product);
-        WebService.descViewer(this.state.product.id).then(res => {
-            console.log("descrease viewer by one");
-        });
+
+    componentWillUnmount = async () => {
+        await WebService.descViewer(this.state.product.id)
+            .then(res => {
+                console.log("descrease viewer successful");
+                client.unsubscribe(this.subscription);
+            })
+            .catch(err => {
+                console.log("cannot query from back4app: ", err);
+                client.unsubscribe(this.subscription);
+            });
     };
+
     fetchProduct = () => {
         const productId = Number(this.props.match.params.id);
         if (!isNaN(productId) && productId > 0) {
             WebService.getProduct(productId).then(res => {
                 const product = JSON.parse(res);
-                console.log(product);
                 if (product.status !== 500) {
                     product.images = JSON.parse(product.images);
                     this.setState({
@@ -161,8 +174,8 @@ class ProductDetail extends Component {
     };
 
     render = () => {
-        const { productFound, product } = this.state;
-        if (!productFound) {
+        const { productFound, product, numberOfViewer } = this.state;
+        if (!productFound || !product) {
             return <div className="d-flex justify-content-center p-5">Product not found</div>;
         } else if (Object.keys(product).length === 0) {
             return <Loader />;
@@ -195,6 +208,11 @@ class ProductDetail extends Component {
 
                     {/* <!-- Single Product Description --> */}
                     <div className="single_product_desc clearfix">
+                        {numberOfViewer !== 0 && (
+                            <div className="d-flex justify-content-center p-5">
+                                There has {numberOfViewer} users watching this product with you.
+                            </div>
+                        )}
                         <span>{product.brand && product.brand[0].brand_name}</span>
                         <a href="cart.html">
                             <h2>{product.product_name}</h2>

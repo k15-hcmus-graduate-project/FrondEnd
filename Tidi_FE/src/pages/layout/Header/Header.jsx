@@ -320,7 +320,10 @@ class Header extends Component {
                                         Register
                                     </Link>
                                 </div>
-                            )}
+                            )}{" "}
+                            <Link to={ROUTE_NAME.MAP_DIRECTION} className="btn btn-outline-secondary">
+                                To Store
+                            </Link>
                         </div>
                     </div>
                 </div>

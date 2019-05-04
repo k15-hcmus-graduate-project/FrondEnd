@@ -12,6 +12,8 @@ import HomePage from "../pages/common/HomePage";
 import Products from "../pages/products/Products";
 import ProductDetail from "../pages/products/ProductDetail";
 import Orders from "../pages/orders/Orders";
+import Directions from "../pages/direction/Directions";
+
 import CheckoutDetail from "../pages/checkout/CheckoutDetail";
 import OrderDetail from "../pages/orders/OrderDetail";
 import Admin from "../pages/admin/Admin";
@@ -31,6 +33,7 @@ export const ROUTE_NAME = {
     CHECKOUT_CALLBACK: "/checkout/callback",
     ORDERS: "/orders",
     ORDER_DETAIL: "/order",
+    MAP_DIRECTION: "/direction",
     ADMIN: {
         HOME: "/admin",
         USER: "/admin/user",
@@ -81,6 +84,11 @@ const ROUTES = [
     {
         path: ROUTE_NAME.REGISTER,
         component: props => <Auth {...props} loginForm={false} />,
+        permission: USER_TYPE.PUBLIC
+    },
+    {
+        path: ROUTE_NAME.MAP_DIRECTION,
+        component: Directions,
         permission: USER_TYPE.PUBLIC
     },
     {

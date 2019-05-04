@@ -97,7 +97,7 @@ class SearchPanel extends Component {
     generateBrands = () => {
         let visibleElements = [];
         let collapsedElements = [];
-        const { brands, filter } = this.state;
+        const { brands } = this.state;
         const L = brands.length;
         for (let i = 0; i < L; i++) {
             let elementContainer = visibleElements;

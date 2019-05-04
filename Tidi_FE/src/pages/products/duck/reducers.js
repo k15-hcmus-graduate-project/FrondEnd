@@ -15,9 +15,14 @@ const INITIAL_STATE = {
         currentIndustryId: 0
     },
 
-    ProductDetail: {}
+    ProductDetail: {},
+
+    decreaseViewer: false
 };
 
+// const sleep = milliseconds => {
+//     return new Promise(resolve => setTimeout(resolve, milliseconds));
+// };
 const productsReducer = (state = INITIAL_STATE, action) => {
     switch (action.type) {
         case Types.FETCH_PRODUCTS:
@@ -38,6 +43,15 @@ const productsReducer = (state = INITIAL_STATE, action) => {
                 }
             };
 
+        case Types.DESCREASE_VIEWER:
+            console.log("action reducer viewer: ", action.payload);
+            // sleep(100000000).then(() => {
+            return {
+                ...state,
+                decreaseViewer: action.payload
+            };
+        // });
+        // break;
         case Types.FETCH_BRANCHES:
             return {
                 ...state,

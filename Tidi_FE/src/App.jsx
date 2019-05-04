@@ -4,10 +4,6 @@ import React, { Component } from "react";
 import { BrowserRouter, Switch } from "react-router-dom";
 import ROUTES from "./routes/main.routing";
 import RouteWithSubRoutes from "./routes/RouteWithSubRoutes";
-
-
-
-
 class App extends Component {
     render() {
         return (

@@ -371,7 +371,6 @@ class Products extends Component {
         );
     };
 }
-
 class Product extends Component {
     static propTypes = {
         product: PropTypes.shape({

@@ -1,9 +1,9 @@
 // StyleSheets
-import React from "react";
+import React, { Component } from "react";
 import "./Modal.scss";
 import PropTypes from "prop-types";
 
-class Modal extends React.Component {
+class Modal extends Component {
     static propTypes = {
         modalId: PropTypes.string,
         modalHandleSubmit: PropTypes.func,
@@ -18,11 +18,11 @@ class Modal extends React.Component {
         modalSubmitClassName: "btn-success"
     };
 
-    hideModal() {
+    hideModal = () => {
         window.$("#" + this.props.modalId).modal("hide");
-    }
+    };
 
-    handleSubmit() {
+    handleSubmit = () => {
         if (this.props.modalHandleSubmit) {
             this.props
                 .modalHandleSubmit()
@@ -35,15 +35,15 @@ class Modal extends React.Component {
                     this.hideModal();
                 });
         }
-    }
+    };
 
-    handleClose() {
+    handleClose = () => {
         if (this.props.modalHandleClose) {
             this.props.modalHandleClose();
         }
-    }
+    };
 
-    render() {
+    render = () => {
         return (
             <div>
                 {/* <!-- Modal --> */}
@@ -84,7 +84,7 @@ class Modal extends React.Component {
                 </div>
             </div>
         );
-    }
+    };
 }
 
 export default Modal;

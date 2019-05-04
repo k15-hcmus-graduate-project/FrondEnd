@@ -109,3 +109,16 @@ export const ZP_ORDER_STATUS = {
     CANCELED: "CANCELED",
     SUCCESSFUL: "SUCCESSFUL"
 };
+export const here = {
+    app_id: "devportal-demo-20180625",
+    app_code: "9v2BkviRwi9Ot26kp2IysQ",
+    useHTTPS: true
+};
+export const environment = {
+    production: false,
+    PARSE_APP_ID: "1V73PQUeskvatsPQazkKEEQdbVsQ5lsKb77UHoQI",
+    PARSE_JS_KEY: "iDKJ337CYJ80XjUOy8SIp2WTtPq0q56154kadxaO",
+    masterKey: "HMhA16lGsuVRT5rYaEkTtAvUhStKDjNmjE1WR3E8",
+    serverURL: "https://parseapi.back4app.com",
+    liveQueryServerURL: "wss://tidi.back4app.io"
+};
