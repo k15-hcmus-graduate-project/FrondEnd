@@ -374,7 +374,6 @@ class AdminUser extends Component {
                 </Fragment>
             );
         });
-
         return r;
     };
 

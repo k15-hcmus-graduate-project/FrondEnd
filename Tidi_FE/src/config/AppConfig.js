@@ -41,3 +41,7 @@ export const API_CHECKOUT_ORDER = "/checkout/order";
 export const API_CHECKOUT_ORDERDETAIL = "/checkout/order/orderdetail";
 export const API_CHECKOUT_ORDER_UPDATE = "/checkout/admin/order";
 export const API_CHECKOUT_ADMIN_ORDER = "/checkout/admin/order";
+
+// location
+export const API_LOCATION_GET = "/location";
+export const API_LOCATION_UPDATE = "/location";

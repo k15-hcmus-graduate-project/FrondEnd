@@ -28,25 +28,30 @@ class Api {
             });
     }
 
-    static get(path: string) {
-        const token = localStorage.getItem("authToken");
-        const config = {
-            headers: {
-                "Content-Type": "application/json",
-                "x-access-token": token
-            },
-            timeout: 10000
-        };
-
-        return axios
-            .get(`${path}`, config)
-            .then(res => {
-                if (res.data) return res.data;
-                return res;
-            })
-            .catch(error => {
-                throw error;
-            });
+    static getLocationTest(path: string) {
+        // const token = localStorage.getItem("authToken");
+        // const config = {
+        //     headers: {
+        //         "Content-Type": "text/javascript; charset=utf-8",
+        //         "content-encoding": "gzip"
+        //     },
+        //     params: {
+        //         searchtext: "182 Le Dai Hanh, q11, tp HCM",
+        //         app_id: "devportal-demo-20180625",
+        //         app_code: "9v2BkviRwi9Ot26kp2IysQ",
+        //         gen: 9
+        //     },
+        //     timeout: 10000
+        // };
+        // return axios
+        //     .get(`${path}`, config)
+        //     .then(res => {
+        //         if (res.data) return res.data;
+        //         return res;
+        //     })
+        //     .catch(error => {
+        //         throw error;
+        //     });
     }
 
     static getFreshToken(path: string) {

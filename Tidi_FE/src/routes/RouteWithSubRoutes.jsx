@@ -1,9 +1,9 @@
 // StyleSheets
-import "./RouteWithSubRoutes.scss";
-import React from "react";
+import React, { Component } from "react";
 import PropTypes from "prop-types";
 import AuthService from "../services/AuthService";
 import { Route } from "react-router-dom";
+import "./RouteWithSubRoutes.scss";
 import { USER_TYPE } from "../config/constants";
 import Loader from "../pages/common/Loader/Loader";
 
@@ -14,7 +14,7 @@ const INTIIAL_STATE = {
     username: null
 };
 
-class HOC extends React.Component {
+class HOC extends Component {
     static propTypes = {
         requiredPermission: PropTypes.oneOf([USER_TYPE.ADMIN, USER_TYPE.CUSTOMER, USER_TYPE.PUBLIC]),
         permission: PropTypes.oneOf([USER_TYPE.ADMIN, USER_TYPE.CUSTOMER, USER_TYPE.PUBLIC]),
@@ -30,7 +30,6 @@ class HOC extends React.Component {
         AuthService.isLoggedIn().then(res => {
             let newState = {};
             newState.tokenVerificationCompleted = true;
-
             if (res.tokenIsValid) {
                 newState.isLoggedIn = true;
                 newState.username = res.username;

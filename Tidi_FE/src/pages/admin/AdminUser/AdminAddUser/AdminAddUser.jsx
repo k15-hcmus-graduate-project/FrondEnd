@@ -1,11 +1,11 @@
 // Stylesheet
-import React from "react";
+import React, { Component } from "react";
 import PropTypes from "prop-types";
 import "./AdminAddUser.scss";
 import { USER_TYPE, USER_GENDER, ACTIVE_TYPE } from "../../../../config/constants";
 import FormInput from "../../../common/FormInput";
 
-class AdminAddUser extends React.Component {
+class AdminAddUser extends Component {
     static propTypes = {
         updateForm: PropTypes.func,
         editMode: PropTypes.bool,

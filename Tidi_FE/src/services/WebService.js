@@ -29,7 +29,9 @@ import {
     API_CHECKOUT_ORDER,
     API_CHECKOUT_ORDER_UPDATE,
     API_CHECKOUT_ORDERDETAIL,
-    API_PRODUCT_UPDATE_VIEWER
+    API_PRODUCT_UPDATE_VIEWER,
+    API_LOCATION_GET,
+    API_LOCATION_UPDATE
 } from "../config/AppConfig";
 
 const apiPrefix = {
@@ -627,6 +629,26 @@ export default {
             });
         } else return null;
     },
+    getAllLocation: () => {
+        return fetch({
+            method: "GET",
+            reqBody: {},
+            route: API_LOCATION_GET
+        });
+    },
+    getAddress: (app_id, app_code, address) => {
+        return fetch({
+            method: "GET",
+            reqBody: { app_id: app_id, app_code: app_code, query: address, maxresults: 1 },
+            params: {
+                app_id: app_id,
+                app_code: app_code,
+                query: address,
+                maxresults: 1
+            },
+            route: "https://autocomplete.geocoder.api.here.com/6.2/suggest.json"
+        });
+    },
 
     // 6.10 Get all industries
     adminGetAllIndustries: (token, limit, offset, { keyword }) => {
@@ -972,6 +994,22 @@ export default {
             },
             jwtToken: token,
             route: apiPrefix.zalopay + "/order"
+        });
+    },
+
+    /* 
+        add location for address 
+
+    */
+    updateLocation: (position, distance, id) => {
+        return fetch({
+            method: "PUT",
+            reqBody: {
+                id: id,
+                location: position,
+                distance: distance
+            },
+            route: API_LOCATION_UPDATE
         });
     }
 };

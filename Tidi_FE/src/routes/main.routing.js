@@ -87,11 +87,6 @@ const ROUTES = [
         permission: USER_TYPE.PUBLIC
     },
     {
-        path: ROUTE_NAME.MAP_DIRECTION,
-        component: Directions,
-        permission: USER_TYPE.PUBLIC
-    },
-    {
         path: ROUTE_NAME.RESET_PASSWORD,
         component: props => <Auth {...props} resetForm={true} />,
         permission: USER_TYPE.PUBLIC
@@ -115,6 +110,11 @@ const ROUTES = [
         ),
         permission: USER_TYPE.PUBLIC,
         routes: [
+            {
+                path: ROUTE_NAME.MAP_DIRECTION,
+                component: Directions,
+                permission: USER_TYPE.PUBLIC
+            },
             {
                 path: ROUTE_NAME.PRODUCTS,
                 component: Products,

@@ -6,44 +6,33 @@ const INITIAL_STATE = {
     AdminUser: {
         users: []
     },
-
     AdminAddUser: {
         formData: {
             ...DEFAULT_FORMDATA.AdminAddUser
         }
     },
-
     AdminProduct: {
         products: []
     },
-
     AdminAddProduct: {
         formData: {
             ...DEFAULT_FORMDATA.AdminAddProduct
         }
     },
-
     AdminBrand: {},
-
     AdminAddBrand: {
         formData: {
             ...DEFAULT_FORMDATA.AdminAddBrand
         }
     },
-
     AdminOrder: {
         orders: []
     },
-
     AdminIndustry: {},
-
     AdminAddIndustry: {},
     AdminBranch: {},
-
     AdminAddBranch: {},
-
     AdminAddCategory: {},
-
     AdminFilter: {
         currentPage: 1,
         totalItems: 0,
@@ -52,9 +41,7 @@ const INITIAL_STATE = {
             keyword: ""
         }
     },
-
     Admin: {},
-
     AdminNavBar: {}
 };
 

@@ -67,6 +67,7 @@ class ProductDetail extends Component {
         });
     };
 
+    // phuong thuc auto thuc hiẹn sau khi page duoc load len
     componentDidMount = () => {
         var parseQuery = new Parse.Query("product");
         this.subscription = client.subscribe(parseQuery);

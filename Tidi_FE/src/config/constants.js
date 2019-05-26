@@ -110,8 +110,10 @@ export const ZP_ORDER_STATUS = {
     SUCCESSFUL: "SUCCESSFUL"
 };
 export const here = {
-    app_id: "devportal-demo-20180625",
-    app_code: "9v2BkviRwi9Ot26kp2IysQ",
+    // app_id: "devportal-demo-20180625",
+    // app_code: "9v2BkviRwi9Ot26kp2IysQ",
+    app_id: "XWlu7av4mIl9LiVOkizU",
+    app_code: "SWPg1es3nHq226fb1B6DMQ",
     useHTTPS: true
 };
 export const environment = {

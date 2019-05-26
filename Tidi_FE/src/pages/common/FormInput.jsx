@@ -1,8 +1,8 @@
 // External dependencies
-import React from "react";
+import React, { Component } from "react";
 import PropTypes from "prop-types";
 
-class FormInput extends React.Component {
+class FormInput extends Component {
     static propTypes = {
         type: PropTypes.string.isRequired,
         label: PropTypes.string,
@@ -14,7 +14,7 @@ class FormInput extends React.Component {
         disabled: PropTypes.bool
     };
 
-    render() {
+    render = () => {
         const generateInput = inputType => {
             switch (inputType.toLowerCase()) {
                 case "select":
@@ -61,13 +61,11 @@ class FormInput extends React.Component {
         return (
             <div className={"form-group " + this.props.additionalClass}>
                 {this.props.label && <label>{this.props.label}</label>}
-
                 {generateInput(this.props.type)}
-
                 {this.props.smallLabel && <small className="form-text text-muted" />}
             </div>
         );
-    }
+    };
 }
 
 export default FormInput;

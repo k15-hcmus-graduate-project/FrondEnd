@@ -1,14 +1,15 @@
 import React, { Component } from "react";
-import { Link } from "react-router-dom";
+// import { Link } from "react-router-dom";
 import PropTypes from "prop-types";
 import "./Direction.scss";
 import WebService from "../../../services/WebService";
+import Loader from "../../common/Loader/Loader";
 import Map from "./Map.jsx";
 import { here } from "../../../config/constants";
-import AuthService from "../../../services/AuthService";
-import { ACTIVE_TYPE } from "../../../config/constants";
-import { withCommas } from "../../../helpers/lib";
-import { ROUTE_NAME } from "../../../routes/main.routing";
+// import AuthService from "../../../services/AuthService";
+// import { ACTIVE_TYPE } from "../../../config/constants";
+// import { withCommas } from "../../../helpers/lib";
+// import { ROUTE_NAME } from "../../../routes/main.routing";
 
 class Direction extends Component {
     static propTypes = {
@@ -18,44 +19,60 @@ class Direction extends Component {
 
     constructor(props) {
         super(props);
+        this.state = {
+            address: [],
+            lat: 0,
+            lng: 0
+        };
     }
 
     componentWillMount = () => {
-        // this.fetchOrders();
+        this.getAllAddresses();
     };
+
     componentDidMount = () => {
-        // var platform = new window.H.service.Platform({
-        //     app_id: "APP_ID_HERE",
-        //     app_code: "APP_CODE_HERE"
-        // });
+        if (!this.state.address) {
+            this.getAllAddresses();
+        }
+        this.getCurrentLocation();
     };
-    // fetchOrders = () => {
-    //     WebService.getAllOrders(AuthService.getTokenUnsafe(), 1000, 0, {}).then(res => {
-    //         const result = JSON.parse(res);
-    //         if (result.status && result.status === ACTIVE_TYPE.TRUE) {
-    //             this.props.fetchOrders(result.orders.reverse());
-    //         }
-    //     });
-    // };
-    generateTableRows = orders => {
-        return orders
-            .map((order, idx) => {
-                console.log(order);
-                return (
-                    <tr key={idx}>
-                        <td>{order.date}</td>
-                        <td>{withCommas(order.total)} ₫</td>
-                        <td>{order.status}</td>
-                        <td>
-                            <Link to={ROUTE_NAME.ORDER_DETAIL + "/" + order.id}>Details</Link>
-                        </td>
-                    </tr>
-                );
+
+    getCurrentLocation = () => {
+        navigator.geolocation.getCurrentPosition(
+            position => {
+                // console.log("my current: ", position);
+                var m_lat = position.coords.latitude;
+                var m_lng = position.coords.longitude;
+                this.setState({
+                    lat: m_lat,
+                    lng: m_lng
+                });
+                console.log("my curent: ", this.state);
+            },
+            () => {
+                alert("Geocoder failed");
+            }
+        );
+    };
+
+    componentWillReceiveProps = nextProps => {
+        this.getCurrentLocation();
+    };
+    getAllAddresses = () => {
+        WebService.getAllLocation()
+            .then(res => {
+                const address = JSON.parse(res).addresses;
+                this.setState({
+                    address: address
+                });
             })
-            .reverse();
+            .catch(err => {
+                console.log(err);
+            });
     };
 
     render = () => {
+        if (this.state.lat === 0 && this.state.lng === 0) return <Loader />;
         return (
             <div>
                 <div className="breadcumb_area bg-img" style={{ backgroundImage: "url(/img/bg-img/breadcumb.jpg)" }}>
@@ -78,19 +95,14 @@ class Direction extends Component {
                             <div className="col-10">
                                 <div className="regular-page-content-wrapper section-padding-80">
                                     <div className="regular-page-text App">
-                                        <Map app_id={here.app_id} app_code={here.app_code} lat="42.345978" lng="-83.0405" zoom="12" />
-                                        {/* <h3>Order list</h3>
-                                        <table className="table">
-                                            <thead>
-                                                <tr>
-                                                    <th scope="col">Date</th>
-                                                    <th scope="col">Total</th>
-                                                    <th scope="col">Status</th>
-                                                    <th scope="col" />
-                                                </tr>
-                                            </thead>
-                                            <tbody>{this.generateTableRows(this.props.orders)}</tbody>
-                                        </table> */}
+                                        <Map
+                                            app_id={here.app_id}
+                                            app_code={here.app_code}
+                                            lat={this.state.lat}
+                                            lng={this.state.lng}
+                                            zoom="100"
+                                            address={this.state.address}
+                                        />
                                     </div>
                                 </div>
                             </div>
