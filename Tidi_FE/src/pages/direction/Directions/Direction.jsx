@@ -10,7 +10,7 @@ import { here } from "../../../config/constants";
 // import { ACTIVE_TYPE } from "../../../config/constants";
 // import { withCommas } from "../../../helpers/lib";
 // import { ROUTE_NAME } from "../../../routes/main.routing";
-import { Parse, client } from "../../../helpers/parse";
+// import { Parse, client } from "../../../helpers/parse";
 
 class Direction extends Component {
     static propTypes = {
@@ -29,41 +29,10 @@ class Direction extends Component {
     }
 
     componentWillMount = () => {
-        WebService.getAccountsLocation()
-            .then(res => {
-                const { data } = JSON.parse(res);
-                console.log("user locations: ", data);
-                this.setState({
-                    userLocation: data
-                });
-            })
-            .catch(err => {
-                console.log(err);
-            });
-        let parseAccount = new Parse.Query("accounts");
-        console.log(parseAccount);
-        this.subscription = client.subscribe(parseAccount);
-        // parseAccount
-        //     .find()
-        //     .then(res => {
-        //         console.log(res);
-        //         _.map(res, item => {
-        //             console.log(item.get("location"));
-        //         });
-        //     })
-        //     .catch(err => {
-        //         console.log(err);
-        //     });
-
-        // this.subscription.on("update", object => {
-        //     if (object.id === id) {
-        //         this.setState({
-        //             numberOfViewer: object.get("viewer")
-        //         });
-        //         console.log("The number of people watching this product: ", this.state.numberOfViewer);
-        //     }
-        // });
-
+        // let parseAccount = new Parse.Query("accounts");
+        // console.log(parseAccount);
+        // this.subscription = client.subscribe(parseAccount);
+        this.getCurrentLocation();
         this.getAllAddresses();
     };
 
@@ -71,13 +40,31 @@ class Direction extends Component {
         if (!this.state.address) {
             this.getAllAddresses();
         }
-        this.getCurrentLocation();
+        setInterval(() => {
+            const { lat, lng } = this.state;
+            navigator.geolocation.getCurrentPosition(
+                position => {
+                    var m_lat = position.coords.latitude;
+                    var m_lng = position.coords.longitude;
+                    const distance = new window.H.geo.Point(m_lat, m_lng).distance(new window.H.geo.Point(lat, lng));
+                    console.log("distance now: ", distance);
+                    if (distance > 20) {
+                        this.setState({
+                            lat: m_lat,
+                            lng: m_lng
+                        });
+                    }
+                },
+                () => {
+                    alert("Geocoder failed");
+                }
+            );
+        }, 3000);
     };
 
     getCurrentLocation = () => {
         navigator.geolocation.getCurrentPosition(
             position => {
-                // console.log("my current: ", position);
                 var m_lat = position.coords.latitude;
                 var m_lng = position.coords.longitude;
                 this.setState({
@@ -93,7 +80,7 @@ class Direction extends Component {
     };
 
     componentWillReceiveProps = nextProps => {
-        this.getCurrentLocation();
+        // this.getCurrentLocation();
     };
     getAllAddresses = () => {
         WebService.getAllLocation()
@@ -109,8 +96,13 @@ class Direction extends Component {
     };
 
     render = () => {
-        const { lat, lng } = this.state;
-        if (lat === 0 && lng === 0) return <Loader />;
+        const { lat, lng, address } = this.state;
+        if (lat === 0 && lng === 0)
+            return (
+                <div>
+                    <Loader />
+                </div>
+            );
         return (
             <div>
                 <div className="breadcumb_area bg-img" style={{ backgroundImage: "url(/img/bg-img/breadcumb.jpg)" }}>
@@ -136,11 +128,11 @@ class Direction extends Component {
                                         <Map
                                             app_id={here.app_id}
                                             app_code={here.app_code}
-                                            lat={this.state.lat}
-                                            lng={this.state.lng}
+                                            lat={lat}
+                                            lng={lng}
                                             zoom="100"
-                                            address={this.state.address}
-                                            accLocation={this.state.userLocation}
+                                            address={address}
+                                            // accLocation={this.state.userLocation}
                                         />
                                     </div>
                                 </div>

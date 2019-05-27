@@ -1,7 +1,6 @@
 import React, { Component } from "react";
 import { here } from "../../../config/constants";
 import _ from "lodash";
-import { Dropdown, DropdownToggle, DropdownMenu, DropdownItem } from "reactstrap";
 import WebService from "../../../services/WebService";
 // import WebService from "../../../services/WebService";
 class Map extends Component<State> {
@@ -74,7 +73,7 @@ class Map extends Component<State> {
                 lng: nextProps.lng
             }
         });
-        this.drawMap();
+        // document.getElementById("here-map").innerHTML = "";
     };
 
     prepareLayout = () => {
@@ -107,13 +106,12 @@ class Map extends Component<State> {
         this.ui = window.H.ui.UI.createDefault(this.map, this.layer, "zh-CN");
     };
 
-    drawMap = async () => {
+    drawMap = () => {
         this.prepareLayout();
         const { lat, lng } = this.state.center;
         var parisMarker = new window.H.map.Marker({ lat: lat, lng: lng });
         this.map.addObject(parisMarker);
-
-        await this.geocode();
+        this.geocode();
         this.findNearestMarker();
     };
     // map to nearest store
@@ -162,7 +160,6 @@ class Map extends Component<State> {
             .getObjects()[0]
             .getPosition()
             .distance(this.state.center);
-
         // update location for stores
         WebService.updateLocation(position, distance, id)
             .then(res => {
@@ -188,20 +185,12 @@ class Map extends Component<State> {
         WebService.getAllLocation()
             .then(res => {
                 const stores = JSON.parse(res).addresses;
-                console.log("stores distance: ", stores);
                 let distance = stores[0].distance;
                 this.nearestStore = stores[0];
                 _.map(stores, item => {
-                    console.log("item: ", item.distance);
-                    console.log("now distance: ", distance);
                     if (item.distance < distance) {
                         distance = item.distance;
                         this.nearestStore = item;
-                        // _.map(stores, item2 => {
-                        //     if (item2.distance < item.distance) {
-                        //         this.nearestStore = item2;
-                        //     }
-                        // });
                     }
                 });
                 this.calculateRouteFromAtoB();
@@ -212,12 +201,9 @@ class Map extends Component<State> {
     };
 
     calculateRouteFromAtoB = () => {
-        console.log("nearest: ", this.nearestStore);
         const position = JSON.parse(this.nearestStore.location);
         const point1 = this.state.center.lat + "," + this.state.center.lng;
         const point2 = position.lat + "," + position.lng;
-        console.log(point1);
-        console.log(point2);
         var router = this.platform.getRoutingService(),
             routeRequestParams = {
                 mode: "fastest;car",
@@ -278,7 +264,6 @@ class Map extends Component<State> {
         for (i = 0; i < route.leg.length; i += 1) {
             for (j = 0; j < route.leg[i].maneuver.length; j += 1) {
                 let maneuver = route.leg[i].maneuver[j];
-                console.log("maneuver: ", maneuver);
                 // Add a marker to the maneuvers group
                 var marker = new window.H.map.Marker(
                     {
@@ -317,12 +302,6 @@ class Map extends Component<State> {
             this.bubble.open();
         }
     };
-    toggle = evt => {
-        console.log(evt.target.firstChild.data);
-        this.setState(prevState => ({
-            dropdownOpen: !prevState.dropdownOpen
-        }));
-    };
     render = () => {
         const style = {
             width: "100%",
@@ -332,15 +311,6 @@ class Map extends Component<State> {
         return (
             <div>
                 <div id="here-map" style={style} />
-                {/* <Dropdown isOpen={this.state.dropdownOpen} toggle={this.toggle}>
-                    <DropdownToggle caret>Dropdown</DropdownToggle>
-                    <DropdownMenu>
-                        <DropdownItem onClick={this.toggle}>Some Action</DropdownItem>
-                        <DropdownItem>Foo Action</DropdownItem>
-                        <DropdownItem>Bar Action</DropdownItem>
-                        <DropdownItem>Quo Action</DropdownItem>
-                    </DropdownMenu>
-                </Dropdown> */}
             </div>
         );
     };
