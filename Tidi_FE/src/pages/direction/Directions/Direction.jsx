@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-// import { Link } from "react-router-dom";
+// import _ from "lodash";
 import PropTypes from "prop-types";
 import "./Direction.scss";
 import WebService from "../../../services/WebService";
@@ -10,12 +10,14 @@ import { here } from "../../../config/constants";
 // import { ACTIVE_TYPE } from "../../../config/constants";
 // import { withCommas } from "../../../helpers/lib";
 // import { ROUTE_NAME } from "../../../routes/main.routing";
+import { Parse, client } from "../../../helpers/parse";
 
 class Direction extends Component {
     static propTypes = {
         fetchOrders: PropTypes.func,
         orders: PropTypes.array
     };
+    subscription;
 
     constructor(props) {
         super(props);
@@ -27,6 +29,41 @@ class Direction extends Component {
     }
 
     componentWillMount = () => {
+        WebService.getAccountsLocation()
+            .then(res => {
+                const { data } = JSON.parse(res);
+                console.log("user locations: ", data);
+                this.setState({
+                    userLocation: data
+                });
+            })
+            .catch(err => {
+                console.log(err);
+            });
+        let parseAccount = new Parse.Query("accounts");
+        console.log(parseAccount);
+        this.subscription = client.subscribe(parseAccount);
+        // parseAccount
+        //     .find()
+        //     .then(res => {
+        //         console.log(res);
+        //         _.map(res, item => {
+        //             console.log(item.get("location"));
+        //         });
+        //     })
+        //     .catch(err => {
+        //         console.log(err);
+        //     });
+
+        // this.subscription.on("update", object => {
+        //     if (object.id === id) {
+        //         this.setState({
+        //             numberOfViewer: object.get("viewer")
+        //         });
+        //         console.log("The number of people watching this product: ", this.state.numberOfViewer);
+        //     }
+        // });
+
         this.getAllAddresses();
     };
 
@@ -72,7 +109,8 @@ class Direction extends Component {
     };
 
     render = () => {
-        if (this.state.lat === 0 && this.state.lng === 0) return <Loader />;
+        const { lat, lng } = this.state;
+        if (lat === 0 && lng === 0) return <Loader />;
         return (
             <div>
                 <div className="breadcumb_area bg-img" style={{ backgroundImage: "url(/img/bg-img/breadcumb.jpg)" }}>
@@ -102,6 +140,7 @@ class Direction extends Component {
                                             lng={this.state.lng}
                                             zoom="100"
                                             address={this.state.address}
+                                            accLocation={this.state.userLocation}
                                         />
                                     </div>
                                 </div>

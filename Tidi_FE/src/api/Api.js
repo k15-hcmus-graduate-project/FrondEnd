@@ -18,7 +18,26 @@ class Api {
                 throw error;
             });
     }
+    static get(path: string) {
+        const token = localStorage.getItem("authToken");
+        const config = {
+            headers: {
+                "Content-Type": "application/json",
+                "x-access-token": token
+            },
+            timeout: 10000
+        };
 
+        return axios
+            .get(`${path}`, config)
+            .then(res => {
+                if (res.data) return res.data;
+                return res;
+            })
+            .catch(error => {
+                throw error;
+            });
+    }
     static postToken(path: string, data: Object, config: Object) {
         return axios
             .post(`${path}`, data, config)

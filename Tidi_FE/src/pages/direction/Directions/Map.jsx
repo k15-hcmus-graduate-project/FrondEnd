@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import { here } from "../../../config/constants";
 import _ from "lodash";
+import { Dropdown, DropdownToggle, DropdownMenu, DropdownItem } from "reactstrap";
 import WebService from "../../../services/WebService";
 // import WebService from "../../../services/WebService";
 class Map extends Component<State> {
@@ -35,6 +36,8 @@ class Map extends Component<State> {
 
         const { lat, lng, zoom } = this.props;
         this.state = {
+            userLocation: [],
+            dropdownOpen: false,
             app_id: here.app_id,
             app_code: here.app_code,
             center: {
@@ -99,7 +102,6 @@ class Map extends Component<State> {
             });
 
         this.map.setBaseLayer(vietnameseMapLayer);
-
         this.events = new window.H.mapevents.MapEvents(this.map);
         this.behavior = new window.H.mapevents.Behavior(this.events);
         this.ui = window.H.ui.UI.createDefault(this.map, this.layer, "zh-CN");
@@ -119,7 +121,6 @@ class Map extends Component<State> {
         const addresses = this.props.address;
         if (addresses) {
             _.map(addresses, (item, index) => {
-                // console.log(item.address);
                 const { address } = item;
                 let geocoder = this.platform.getGeocodingService();
                 let geocodingParameters = {
@@ -161,7 +162,8 @@ class Map extends Component<State> {
             .getObjects()[0]
             .getPosition()
             .distance(this.state.center);
-        // this.stores[index] = data;
+
+        // update location for stores
         WebService.updateLocation(position, distance, id)
             .then(res => {
                 console.log(res);
@@ -169,6 +171,7 @@ class Map extends Component<State> {
             .catch(err => {
                 console.log(err);
             });
+        //get info of store address when click map
         group.addEventListener(
             "tap",
             evt => {
@@ -185,10 +188,21 @@ class Map extends Component<State> {
         WebService.getAllLocation()
             .then(res => {
                 const stores = JSON.parse(res).addresses;
-                const distance = stores[0].distance;
+                console.log("stores distance: ", stores);
+                let distance = stores[0].distance;
                 this.nearestStore = stores[0];
                 _.map(stores, item => {
-                    if (item.distance < distance) this.nearestStore = item;
+                    console.log("item: ", item.distance);
+                    console.log("now distance: ", distance);
+                    if (item.distance < distance) {
+                        distance = item.distance;
+                        this.nearestStore = item;
+                        // _.map(stores, item2 => {
+                        //     if (item2.distance < item.distance) {
+                        //         this.nearestStore = item2;
+                        //     }
+                        // });
+                    }
                 });
                 this.calculateRouteFromAtoB();
             })
@@ -198,6 +212,7 @@ class Map extends Component<State> {
     };
 
     calculateRouteFromAtoB = () => {
+        console.log("nearest: ", this.nearestStore);
         const position = JSON.parse(this.nearestStore.location);
         const point1 = this.state.center.lat + "," + this.state.center.lng;
         const point2 = position.lat + "," + position.lng;
@@ -205,7 +220,7 @@ class Map extends Component<State> {
         console.log(point2);
         var router = this.platform.getRoutingService(),
             routeRequestParams = {
-                mode: "fastest;publicTransport",
+                mode: "fastest;car",
                 representation: "display",
                 waypoint0: point1,
                 waypoint1: point2,
@@ -219,10 +234,6 @@ class Map extends Component<State> {
                 var route = result.response.route[0];
                 this.addRouteShapeToMap(route);
                 this.addManueversToMap(route);
-
-                // addWaypointsToPanel(route.waypoint);
-                // addManueversToPanel(route);
-                // addSummaryToPanel(route.summary);
             },
             err => {
                 alert("Ooops!");
@@ -306,7 +317,12 @@ class Map extends Component<State> {
             this.bubble.open();
         }
     };
-
+    toggle = evt => {
+        console.log(evt.target.firstChild.data);
+        this.setState(prevState => ({
+            dropdownOpen: !prevState.dropdownOpen
+        }));
+    };
     render = () => {
         const style = {
             width: "100%",
@@ -316,6 +332,15 @@ class Map extends Component<State> {
         return (
             <div>
                 <div id="here-map" style={style} />
+                {/* <Dropdown isOpen={this.state.dropdownOpen} toggle={this.toggle}>
+                    <DropdownToggle caret>Dropdown</DropdownToggle>
+                    <DropdownMenu>
+                        <DropdownItem onClick={this.toggle}>Some Action</DropdownItem>
+                        <DropdownItem>Foo Action</DropdownItem>
+                        <DropdownItem>Bar Action</DropdownItem>
+                        <DropdownItem>Quo Action</DropdownItem>
+                    </DropdownMenu>
+                </Dropdown> */}
             </div>
         );
     };

@@ -177,9 +177,18 @@ class ProductDetail extends Component {
     render = () => {
         const { productFound, product, numberOfViewer } = this.state;
         if (!productFound || !product) {
-            return <div className="d-flex justify-content-center p-5">Product not found</div>;
+            return (
+                <div>
+                    <Loader />
+                </div>
+            );
+            // return <div className="d-flex justify-content-center p-5">Product not found</div>;
         } else if (Object.keys(product).length === 0) {
-            return <Loader />;
+            return (
+                <div>
+                    <Loader />
+                </div>
+            );
         } else {
             const discountedPercent = Math.round(product.discPercent * 100);
             const discountedPrice = Math.round(product.price - product.price * product.discPercent);

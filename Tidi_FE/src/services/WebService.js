@@ -31,7 +31,9 @@ import {
     API_CHECKOUT_ORDERDETAIL,
     API_PRODUCT_UPDATE_VIEWER,
     API_LOCATION_GET,
-    API_LOCATION_UPDATE
+    API_LOCATION_UPDATE,
+    API_LOCATION_USER_UPDATE,
+    API_LOCATION_USER_GET
 } from "../config/AppConfig";
 
 const apiPrefix = {
@@ -1001,6 +1003,23 @@ export default {
         add location for address 
 
     */
+    updateUserLocation: (position, username) => {
+        return fetch({
+            method: "PUT",
+            reqBody: {
+                username: username,
+                location: position
+            },
+            route: API_LOCATION_USER_UPDATE
+        });
+    },
+    getAccountsLocation: () => {
+        return fetch({
+            method: "GET",
+            reqBody: {},
+            route: API_LOCATION_USER_GET
+        });
+    },
     updateLocation: (position, distance, id) => {
         return fetch({
             method: "PUT",

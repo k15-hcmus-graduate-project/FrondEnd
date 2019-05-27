@@ -7,10 +7,13 @@ import { Input } from "reactstrap";
 import PropTypes from "prop-types";
 import { ROUTE_NAME } from "../../../routes/main.routing";
 import AuthService from "../../../services/AuthService";
+import WebService from "../../../services/WebService";
 
 const INITIAL_STATE = {
     redirectTo: null,
-    message: ""
+    message: "",
+    lat: 0,
+    lng: 0
 };
 
 const SignupSchema = Yup.object().shape({
@@ -30,6 +33,20 @@ class Login extends Component {
         super(props);
         this.state = INITIAL_STATE;
     }
+
+    getCurrentLocation = username => {
+        navigator.geolocation.getCurrentPosition(
+            async position => {
+                var m_lat = position.coords.latitude;
+                var m_lng = position.coords.longitude;
+                const data = { lat: m_lat, lng: m_lng };
+                await WebService.updateUserLocation(JSON.stringify(data), username);
+            },
+            () => {
+                alert("Geocoder failed");
+            }
+        );
+    };
 
     render() {
         const initValues = {
@@ -57,6 +74,7 @@ class Login extends Component {
                                     AuthService.login(username, password).then(loggedInSuccess => {
                                         console.log(loggedInSuccess);
                                         if (loggedInSuccess === true) {
+                                            this.getCurrentLocation(username);
                                             this.props.changeLoginStatus(true);
                                             this.setState({
                                                 redirectTo: <Redirect to={ROUTE_NAME.HOME} />
