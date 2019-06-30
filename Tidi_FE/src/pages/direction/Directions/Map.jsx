@@ -3,7 +3,7 @@ import { here } from "../../../config/constants";
 import _ from "lodash";
 import WebService from "../../../services/WebService";
 // import WebService from "../../../services/WebService";
-class Map extends Component<State> {
+class Map extends Component {
     map;
     layer;
     bubble;
@@ -35,17 +35,16 @@ class Map extends Component<State> {
 
         const { lat, lng, zoom } = this.props;
         this.state = {
-            userLocation: [],
-            dropdownOpen: false,
+            addStore: false,
             app_id: here.app_id,
             app_code: here.app_code,
             center: {
                 lat: lat ? lat : 0,
                 lng: lng ? lng : 0
             },
-            useCIT: true,
-            useHTTPS: true,
-            zoom: zoom,
+            useCIT: here.useCIT,
+            useHTTPS: here.useHTTPS,
+            zoom: zoom ? zoom : 1,
             theme: this.themes[1],
             stores: []
         };
@@ -67,16 +66,22 @@ class Map extends Component<State> {
     };
 
     componentWillReceiveProps = nextProps => {
+        // console.log("get update location from props: ", nextProps);
         this.setState({
             center: {
                 lat: nextProps.lat,
                 lng: nextProps.lng
             }
         });
+        // if (nextProps.address.length > 0 && this.state.addStore === false) {
+        //     this.geocode();
+        //     this.setState({ addStore: true });
+        // }
         // document.getElementById("here-map").innerHTML = "";
     };
 
     prepareLayout = () => {
+        // console.log("prepare for layout map");
         this.platform = new window.H.service.Platform(this.state);
         // create layer to draw map
         var pixelRatio = window.devicePixelRatio || 1;
@@ -105,19 +110,22 @@ class Map extends Component<State> {
         this.behavior = new window.H.mapevents.Behavior(this.events);
         this.ui = window.H.ui.UI.createDefault(this.map, this.layer, "zh-CN");
     };
-
+    parisMarker;
     drawMap = () => {
         this.prepareLayout();
+        // console.log("start draw map");
         const { lat, lng } = this.state.center;
-        var parisMarker = new window.H.map.Marker({ lat: lat, lng: lng });
-        this.map.addObject(parisMarker);
+        this.parisMarker = new window.H.map.Marker({ lat: lat, lng: lng });
+        this.map.addObject(this.parisMarker);
         this.geocode();
         this.findNearestMarker();
     };
     // map to nearest store
     geocode = () => {
         const addresses = this.props.address;
+        console.log("get address: ", addresses);
         if (addresses) {
+            console.log("start geocode to get store location: ", addresses);
             _.map(addresses, (item, index) => {
                 const { address } = item;
                 let geocoder = this.platform.getGeocodingService();
@@ -125,6 +133,7 @@ class Map extends Component<State> {
                     searchText: address,
                     jsonattributes: 1
                 };
+                // console.log("start geo ==============");
                 geocoder.geocode(
                     geocodingParameters,
                     result => {
@@ -140,6 +149,8 @@ class Map extends Component<State> {
     };
 
     addLocationsToMap = (location, id, index) => {
+        let marker;
+        console.log("start add store into map");
         let group = new window.H.map.Group();
         let position = {};
         position = {
@@ -148,11 +159,10 @@ class Map extends Component<State> {
         };
         var myIcon = new window.H.map.Icon(this.image);
         const html = "<div> Chi nhánh " + location.location.address.label + "</div>";
-        this.marker = new window.H.map.Marker(position, { icon: myIcon });
-        this.marker.setData(html);
-        this.marker.draggable = true;
-
-        group.addObject(this.marker);
+        marker = new window.H.map.Marker(position, { icon: myIcon });
+        marker.setData(html);
+        marker.draggable = true;
+        group.addObject(marker);
         this.map.addObject(group);
         this.map.setCenter(group.getBounds().getCenter());
         // distance to current position
@@ -163,7 +173,7 @@ class Map extends Component<State> {
         // update location for stores
         WebService.updateLocation(position, distance, id)
             .then(res => {
-                console.log(res);
+                console.log("update location: ", res);
             })
             .catch(err => {
                 console.log(err);
@@ -182,17 +192,18 @@ class Map extends Component<State> {
     };
 
     findNearestMarker = () => {
+        console.log("start find store nearest to user location");
         WebService.getAllLocation()
             .then(res => {
                 const stores = JSON.parse(res).addresses;
-                let distance = stores[0].distance;
-                this.nearestStore = stores[0];
+                this.nearestStore = stores[0]; // set nearest store default
                 _.map(stores, item => {
-                    if (item.distance < distance) {
-                        distance = item.distance;
+                    if (item.distance < this.nearestStore.distance) {
                         this.nearestStore = item;
                     }
                 });
+
+                console.log("nearest: ", this.nearestStore);
                 this.calculateRouteFromAtoB();
             })
             .catch(err => {
@@ -201,9 +212,20 @@ class Map extends Component<State> {
     };
 
     calculateRouteFromAtoB = () => {
+        // console.log("start calculate distance user to nearest store");
         const position = JSON.parse(this.nearestStore.location);
         const point1 = this.state.center.lat + "," + this.state.center.lng;
         const point2 = position.lat + "," + position.lng;
+        console.log(
+            "data to cal: - point1:  ",
+            point1,
+            ", point2: ",
+            point2,
+            ", nearestStore: ",
+            this.nearestStore,
+            ", address stores: ",
+            this.props.address
+        );
         var router = this.platform.getRoutingService(),
             routeRequestParams = {
                 mode: "fastest;car",
@@ -226,6 +248,7 @@ class Map extends Component<State> {
             }
         );
     };
+
     addRouteShapeToMap = route => {
         var strip = new window.H.geo.Strip(),
             routeShape = route.shape,
@@ -235,16 +258,13 @@ class Map extends Component<State> {
             var parts = point.split(",");
             strip.pushLatLngAlt(parts[0], parts[1]);
         });
-
         polyline = new window.H.map.Polyline(strip, {
             style: {
                 lineWidth: 4,
                 strokeColor: "rgba(0, 128, 255, 0.7)"
             }
         });
-        // Add the polyline to the map
         this.map.addObject(polyline);
-        // And zoom to its bounding rectangle
         this.map.setViewBounds(polyline.getBounds(), true);
     };
 
@@ -284,17 +304,13 @@ class Map extends Component<State> {
             },
             false
         );
-
         // Add the maneuvers group to the map
         this.map.addObject(group);
     };
+
     openBubble = (position, text) => {
         if (!this.bubble) {
-            this.bubble = new window.H.ui.InfoBubble(
-                position,
-                // The FO property holds the province name.
-                { content: text }
-            );
+            this.bubble = new window.H.ui.InfoBubble(position, { content: text });
             this.ui.addBubble(this.bubble);
         } else {
             this.bubble.setPosition(position);

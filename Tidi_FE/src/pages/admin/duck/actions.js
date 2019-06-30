@@ -26,6 +26,11 @@ const updateAddProductForm = payload => ({
     payload
 });
 
+const updateAddStoreForm = payload => ({
+    type: Types.ADMIN_STORE_UPDATE_FORM,
+    payload
+});
+
 const updateAddBrandForm = payload => ({
     type: Types.ADMIN_BRAND_UPDATE_FORM,
     payload
@@ -47,6 +52,7 @@ export default {
     fetchUsers,
     fetchProducts,
     updateAddProductForm,
+    updateAddStoreForm,
     updateAddBrandForm,
     fetchOrders,
     updateOrderForm

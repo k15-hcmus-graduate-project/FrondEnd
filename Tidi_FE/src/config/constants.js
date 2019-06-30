@@ -80,7 +80,16 @@ export const DEFAULT_FORMDATA = {
         images: '["https://www.twsf.com.tw/taipei/images/default.jpg"]',
         description: "",
         amount: 0,
+        stock: 0,
+        new_amount: 0,
         active: ACTIVE_TYPE.TRUE
+    },
+    AdminAddStore: {
+        id: "",
+        product_name: "",
+        store: 1,
+        store_name: "",
+        store_address: ""
     },
 
     AdminAddBrand: {
@@ -110,17 +119,15 @@ export const ZP_ORDER_STATUS = {
     SUCCESSFUL: "SUCCESSFUL"
 };
 export const here = {
-    // app_id: "devportal-demo-20180625",
-    // app_code: "9v2BkviRwi9Ot26kp2IysQ",
     app_id: "XWlu7av4mIl9LiVOkizU",
     app_code: "SWPg1es3nHq226fb1B6DMQ",
     useHTTPS: true
 };
 export const environment = {
     production: false,
-    PARSE_APP_ID: "1V73PQUeskvatsPQazkKEEQdbVsQ5lsKb77UHoQI",
-    PARSE_JS_KEY: "iDKJ337CYJ80XjUOy8SIp2WTtPq0q56154kadxaO",
-    masterKey: "HMhA16lGsuVRT5rYaEkTtAvUhStKDjNmjE1WR3E8",
-    serverURL: "https://parseapi.back4app.com",
-    liveQueryServerURL: "wss://tidi.back4app.io"
+    PARSE_APP_ID: "yf0epfCPMF1RxeR3kc6VdpDFb2qpE7pQgpLiGsG7",
+    PARSE_JS_KEY: "Lh1WCK66TzgUR80NhQ736NQvOrzil2cWhZnyU4XY",
+    masterKey: "OzV3QnIefjbn14kyEEVMcOQs2o7kxWNSk0I6SW7e",
+    serverURL: "https://parseapi.back4app.com/",
+    liveQueryServerURL: "wss://sang.back4app.io"
 };

@@ -3,6 +3,7 @@
 import React, { Component } from "react";
 import { Link } from "react-router-dom";
 import PropTypes from "prop-types";
+import queryString from "query-string";
 import "./SearchPanel.scss";
 import { ROUTE_NAME } from "../../../routes/main.routing";
 import LIB from "../../../helpers/lib";
@@ -15,7 +16,8 @@ const INITIAL_STATE = {
         brand: {},
         priceFrom: "",
         priceTo: "",
-        priceIsInvalid: false
+        priceIsInvalid: false,
+        currentIndustryId: 0
     }
 };
 
@@ -35,6 +37,14 @@ class SearchPanel extends Component {
         this.fetchAllBrands();
         this.props.updateBranches(0);
     };
+    componentWillReceiveProps = nextProps => {
+        let { ind } = queryString.parse(nextProps.location.search);
+        if (ind)
+            this.setState({
+                currentIndustryId: ind - 1 >= 0 ? ind - 1 : 0
+            });
+        console.log("now industry: ", this.state.currentIndustryId);
+    };
 
     fetchAllBrands = () => {
         WebService.getAllBrands()
@@ -50,7 +60,6 @@ class SearchPanel extends Component {
     };
 
     handleFilterItemSelected = filter => {
-        console.log(filter);
         this.setState({
             filter: {
                 ...this.state.filter,
@@ -61,7 +70,6 @@ class SearchPanel extends Component {
 
     handleChangePrice = (propName, value) => {
         const newState = {};
-
         let x = Number(value);
         if (value === "" || x) {
             newState[propName] = value;
@@ -81,14 +89,19 @@ class SearchPanel extends Component {
     handleApplyFilter = () => {
         const { brand, priceFrom, priceTo } = this.state.filter;
         let queryString = "?";
+        console.log("this.state: ", this.state);
 
         if (brand.id) {
             queryString += `${QUERY_PARAMS.brandId}=${brand.id}`;
-        }
-
-        if (priceFrom && priceTo) {
-            queryString += `&${QUERY_PARAMS.minPrice}=${priceFrom}`;
-            queryString += `&${QUERY_PARAMS.maxPrice}=${priceTo}`;
+            if (priceFrom && priceTo) {
+                queryString += `&${QUERY_PARAMS.minPrice}=${priceFrom}`;
+                queryString += `&${QUERY_PARAMS.maxPrice}=${priceTo}`;
+            }
+        } else {
+            if (priceFrom && priceTo) {
+                queryString += `${QUERY_PARAMS.minPrice}=${priceFrom}`;
+                queryString += `&${QUERY_PARAMS.maxPrice}=${priceTo}`;
+            }
         }
 
         this.props.history.push(queryString);
@@ -107,11 +120,6 @@ class SearchPanel extends Component {
             const brand = brands[i];
             elementContainer.push(
                 <li key={i}>
-                    {/* <a
-                        // href="#/"
-                        onClick={() => this.handleFilterItemSelected({ brand })}
-                        className={brand.brand_name === filter.brand.brand_name ? "filter-item-selected" : undefined}
-                    > */}
                     <Link
                         to={{
                             pathname: ROUTE_NAME.PRODUCTS,
@@ -120,8 +128,6 @@ class SearchPanel extends Component {
                     >
                         {brand.brand_name}
                     </Link>
-                    {/* {brand.brand_name} */}
-                    {/* </a> */}
                 </li>
             );
         }
@@ -147,7 +153,8 @@ class SearchPanel extends Component {
     };
 
     generateBranches = () => {
-        const { industries, currentIndustryId } = this.props;
+        const { industries } = this.props;
+        const { currentIndustryId } = this.state;
         if (!industries) return "";
         if (currentIndustryId !== undefined && industries[currentIndustryId]) {
             return industries[currentIndustryId].branches.map((branch, index) => {
@@ -179,6 +186,8 @@ class SearchPanel extends Component {
 
     render = () => {
         const { priceIsInvalid, priceFrom, priceTo } = this.state.filter;
+        console.log("price is invalid: ", priceIsInvalid);
+
         return (
             <div className="shop_sidebar_area">
                 {/* <!-- ##### Single Widget ##### --> */}
@@ -201,17 +210,19 @@ class SearchPanel extends Component {
                     <h6 className="widget-title mb-30">Filter by</h6>
                     {/* <!-- Widget Title 2 --> */}
                     <p className="widget-title2 mb-30">Price</p>
-
                     <div className="widget-desc">
                         <div className="d-flex">
                             <input
-                                className={"form-control mr-2" + (priceIsInvalid ? " is-invalid" : "")}
+                                className={"form-control mr-2 " + (priceIsInvalid ? " is-invalid" : "")}
                                 placeholder="From"
                                 value={priceFrom}
                                 onChange={e => this.handleChangePrice("priceFrom", e.target.value)}
                             />
+                        </div>
+                        <br />
+                        <div className="d-flex">
                             <input
-                                className={"form-control" + (priceIsInvalid ? " is-invalid" : "")}
+                                className={"form-control mr-2 " + (priceIsInvalid ? " is-invalid" : "")}
                                 placeholder="To"
                                 value={priceTo}
                                 onChange={e => this.handleChangePrice("priceTo", e.target.value)}

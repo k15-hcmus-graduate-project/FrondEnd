@@ -33,7 +33,11 @@ import {
     API_LOCATION_GET,
     API_LOCATION_UPDATE,
     API_LOCATION_USER_UPDATE,
-    API_LOCATION_USER_GET
+    API_LOCATION_USER_GET,
+    API_CHANGE_NUMBER_USER,
+    API_PRODUCT_ADMIN_STORE_ALL,
+    API_PRODUCT_ADMIN_STORE_ADD,
+    API_PRODUCT_ADMIN_HISTORY
 } from "../config/AppConfig";
 
 const apiPrefix = {
@@ -50,7 +54,8 @@ const fetch = ({ method, reqBody, route, jwtToken }) => {
     return new Promise((resolve, reject) => {
         const HttpHeader = {
             "Content-Type": "application/json",
-            "x-access-token": jwtToken
+            "x-access-token": jwtToken,
+            "Access-Control-Allow-Origin": "*"
         };
 
         // if (jwtToken) {
@@ -537,13 +542,42 @@ export default {
             route: API_PRODUCT_ADMIN_ADD
         });
     },
+    // insert store
+    adminInsertStore: (token, { store_name, store_address }) => {
+        return fetch({
+            method: "POST",
+            reqBody: {
+                store_name,
+                store_address
+            },
+            jwtToken: token,
+            route: API_PRODUCT_ADMIN_STORE_ADD
+        });
+    },
 
     // 6.6 Update product
     adminUpdateProduct: (
         token,
         id,
-        { product_name, industry_id, branch_id, category_id, brand_id, price, images, description, longDescription, amount, active }
+        {
+            product_name,
+            industry_id,
+            branch_id,
+            category_id,
+            brand_id,
+            price,
+            images,
+            description,
+            longDescription,
+            amount,
+            stock,
+            new_amount,
+            active,
+            last_updated,
+            updated_by
+        }
     ) => {
+        console.log("stock: ", stock);
         if (token) {
             return fetch({
                 method: "PUT",
@@ -559,7 +593,11 @@ export default {
                     description,
                     longDescription,
                     amount,
-                    active
+                    stock,
+                    new_amount,
+                    active,
+                    last_updated,
+                    updated_by
                 },
                 jwtToken: token,
                 route: API_PRODUCT_ADMIN_UPDATE
@@ -651,47 +689,62 @@ export default {
             route: "https://autocomplete.geocoder.api.here.com/6.2/suggest.json"
         });
     },
+    getAllAddress: token => {
+        if (token) {
+            return fetch({
+                method: "GET",
+                jwtToken: token,
+                route: API_PRODUCT_ADMIN_STORE_ALL
+            });
+        }
+    },
 
     // 6.10 Get all industries
     adminGetAllIndustries: (token, limit, offset, { keyword }) => {
-        return fetch({
-            method: "POST",
-            reqBody: {
-                limit,
-                offset,
-                query: {
-                    keyword
-                }
-            },
-            jwtToken: token,
-            route: API_PRODUCT_ADMIN_INDUSTRY_ALL
-        });
+        if (token) {
+            return fetch({
+                method: "POST",
+                reqBody: {
+                    limit,
+                    offset,
+                    query: {
+                        keyword
+                    }
+                },
+                jwtToken: token,
+                route: API_PRODUCT_ADMIN_INDUSTRY_ALL
+            });
+        }
     },
 
     // 6.11 Insert  industry
     adminInsertIndustry: (token, { industryName }) => {
-        return fetch({
-            method: "POST",
-            reqBody: {
-                industryName
-            },
-            jwtToken: token,
-            route: apiPrefix.admin + "/industry/insert"
-        });
+        if (token) {
+            return fetch({
+                method: "POST",
+                reqBody: {
+                    industryName
+                },
+                jwtToken: token,
+                route: apiPrefix.admin + "/industry/insert"
+            });
+        }
     },
 
     // 6.12 Update industry
     adminUpdateIndustry: (token, id, { industryName, active }) => {
-        return fetch({
-            method: "POST",
-            reqBody: {
-                id,
-                industryName,
-                active
-            },
-            jwtToken: token,
-            route: apiPrefix.admin + "/industry/update"
-        });
+        if (token) {
+            return fetch({
+                method: "POST",
+                reqBody: {
+                    id,
+                    industryName,
+                    active
+                },
+                jwtToken: token,
+                route: apiPrefix.admin + "/industry/update"
+            });
+        }
     },
 
     // 6.13 Get all Branches
@@ -714,109 +767,123 @@ export default {
 
     // 6.14 Insert branch
     adminInsertBranch: (token, { branchName, industryId }) => {
-        return fetch({
-            method: "POST",
-            reqBody: {
-                branchName,
-                industryId
-            },
-            jwtToken: token,
-            route: apiPrefix.admin + "/branch/insert"
-        });
+        if (token) {
+            return fetch({
+                method: "POST",
+                reqBody: {
+                    branchName,
+                    industryId
+                },
+                jwtToken: token,
+                route: apiPrefix.admin + "/branch/insert"
+            });
+        }
     },
 
     // 6.15 Update branch
     adminUpdateBranch: (token, id, { branchName, industryId, active }) => {
-        return fetch({
-            method: "POST",
-            reqBody: {
-                id,
-                branchName,
-                industryId,
-                active
-            },
-            jwtToken: token,
-            route: apiPrefix.admin + "/branch/update"
-        });
+        if (token) {
+            return fetch({
+                method: "POST",
+                reqBody: {
+                    id,
+                    branchName,
+                    industryId,
+                    active
+                },
+                jwtToken: token,
+                route: apiPrefix.admin + "/branch/update"
+            });
+        }
     },
 
     // 6.16 Get all Categories
     adminGetAllCategories: (token, limit, offset, { keyword }) => {
-        return fetch({
-            method: "POST",
-            reqBody: {
-                limit,
-                offset,
-                query: {
-                    keyword
-                }
-            },
-            jwtToken: token,
-            route: API_PRODUCT_ADMIN_CATEGORY_ALL
-        });
+        if (token) {
+            return fetch({
+                method: "POST",
+                reqBody: {
+                    limit,
+                    offset,
+                    query: {
+                        keyword
+                    }
+                },
+                jwtToken: token,
+                route: API_PRODUCT_ADMIN_CATEGORY_ALL
+            });
+        }
     },
 
     // 6.17 Insert category
     adminInsertCategory: (token, { categoryName, industryId, branchId }) => {
-        return fetch({
-            method: "POST",
-            reqBody: {
-                categoryName,
-                industryId,
-                branchId
-            },
-            jwtToken: token,
-            route: apiPrefix.admin + "/category/insert"
-        });
+        if (token) {
+            return fetch({
+                method: "POST",
+                reqBody: {
+                    categoryName,
+                    industryId,
+                    branchId
+                },
+                jwtToken: token,
+                route: apiPrefix.admin + "/category/insert"
+            });
+        }
     },
 
     // 6.18 Update category
     adminUpdateCategory: (token, id, { categoryName, branchId, industryId, active }) => {
-        return fetch({
-            method: "POST",
-            reqBody: {
-                id,
-                categoryName,
-                industryId,
-                branchId,
-                active
-            },
-            jwtToken: token,
-            route: apiPrefix.admin + "/category/update"
-        });
+        if (token) {
+            return fetch({
+                method: "POST",
+                reqBody: {
+                    id,
+                    categoryName,
+                    industryId,
+                    branchId,
+                    active
+                },
+                jwtToken: token,
+                route: apiPrefix.admin + "/category/update"
+            });
+        }
     },
 
     // 6.19 Get all Campaigns
     adminGetAllCampaigns: (token, limit, offset, { keyword, startTime, expiredTime }) => {
-        return fetch({
-            method: "GET",
-            reqBody: {
-                limit,
-                offset,
-                query: {
-                    keyword,
-                    startTime,
-                    expiredTime
-                }
-            },
-            jwtToken: token,
-            route: apiPrefix.admin + "/campaign/all"
-        });
+        if (token) {
+            return fetch({
+                method: "GET",
+                reqBody: {
+                    limit,
+                    offset,
+                    query: {
+                        keyword,
+                        startTime,
+                        expiredTime
+                    }
+                },
+                jwtToken: token,
+                route: apiPrefix.admin + "/campaign/all"
+            });
+        }
     },
 
     // 6.20 Insert campaign
     adminInsertCampaign: (token, { campaignName, description, startTime, expiredTime }) => {
-        return fetch({
-            method: "POST",
-            reqBody: {
-                campaignName,
-                description,
-                startTime,
-                expiredTime
-            },
-            jwtToken: token,
-            route: apiPrefix.admin + "/campaign/insert"
-        });
+        if (token) {
+            return fetch({
+                method: "POST",
+                reqBody: {
+                    campaignName,
+                    description,
+                    startTime,
+                    expiredTime
+                },
+                jwtToken: token,
+                route: apiPrefix.admin + "/campaign/insert"
+            });
+        }
     },
 
     // 6.21 Update campaign
@@ -956,6 +1023,20 @@ export default {
             route: API_CHECKOUT_ADMIN_ORDER
         });
     },
+    // 6.28 Get all Orders
+    adminGetProHistory: (token, limit, offset, id) => {
+        console.log("get by id: ", id);
+        return fetch({
+            method: "POST",
+            reqBody: {
+                limit,
+                offset,
+                id: id
+            },
+            jwtToken: token,
+            route: API_PRODUCT_ADMIN_HISTORY
+        });
+    },
 
     // 6.29 GET one order
     adminGetOrder: (token, orderId) => {
@@ -1029,6 +1110,15 @@ export default {
                 distance: distance
             },
             route: API_LOCATION_UPDATE
+        });
+    },
+    changeUserConnect: option => {
+        return fetch({
+            method: "PUT",
+            reqBody: {
+                option: option
+            },
+            route: API_CHANGE_NUMBER_USER
         });
     }
 };

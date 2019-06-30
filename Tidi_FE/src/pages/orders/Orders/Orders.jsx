@@ -36,7 +36,9 @@ class Order extends Component {
                         <td>{withCommas(order.total)} ₫</td>
                         <td>{order.status}</td>
                         <td>
-                            <Link to={ROUTE_NAME.ORDER_DETAIL + "/" + order.id}>Details</Link>
+                            <Link to={ROUTE_NAME.ORDER_DETAIL + "/" + order.id}>
+                                <button className="btn btn-info">Details</button>
+                            </Link>
                         </td>
                     </tr>
                 );

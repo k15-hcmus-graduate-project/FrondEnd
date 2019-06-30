@@ -19,6 +19,9 @@ import OrderDetail from "../pages/orders/OrderDetail";
 import Admin from "../pages/admin/Admin";
 import AdminUser from "../pages/admin/AdminUser";
 import AdminProduct from "../pages/admin/AdminProduct";
+import AdminStore from "../pages/admin/AdminStore";
+import AdminProductReview from "../pages/admin/AdminProduct/AdminProductReview";
+import AdminProductHistory from "../pages/admin/AdminProduct/AdminProductHistory";
 import AdminBrand from "../pages/admin/AdminBrand";
 import AdminOrder from "../pages/admin/AdminOrder";
 
@@ -38,6 +41,9 @@ export const ROUTE_NAME = {
         HOME: "/admin",
         USER: "/admin/user",
         PRODUCT: "/admin/product",
+        STORE: "/admin/store",
+        PRODUCTREVIEW: "/admin/product/review",
+        PRODUCTHISTORY: "/admin/product/history",
         BRAND: "/admin/catalog",
         ORDER: "/admin/order"
     }
@@ -57,6 +63,23 @@ const ROUTES = [
             {
                 path: ROUTE_NAME.ADMIN.PRODUCT,
                 component: AdminProduct,
+                exact: true,
+                permission: USER_TYPE.ADMIN
+            },
+            {
+                path: ROUTE_NAME.ADMIN.STORE,
+                component: AdminStore,
+                exact: true,
+                permission: USER_TYPE.ADMIN
+            },
+            {
+                path: ROUTE_NAME.ADMIN.PRODUCTREVIEW,
+                component: AdminProductReview,
+                permission: USER_TYPE.ADMIN
+            },
+            {
+                path: ROUTE_NAME.ADMIN.PRODUCTHISTORY,
+                component: AdminProductHistory,
                 permission: USER_TYPE.ADMIN
             },
             {

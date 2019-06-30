@@ -15,8 +15,8 @@ type Props = {
 class AdminAddProduct extends Component<Props> {
     render = () => {
         const { formData, updateForm, changeBranchHandler, changeIndustryHandler, branches, categories, brands, industries } = this.props;
-
         if (!branches || !categories || !brands || !industries) return "";
+
         return (
             <div>
                 <form>
@@ -38,19 +38,21 @@ class AdminAddProduct extends Component<Props> {
                         <FormInput
                             label="Price"
                             type="text"
-                            value={formData.price}
+                            value={formData.price ? parseInt(formData.price, 10) : 0}
                             onChangeHandler={e =>
                                 updateForm({
-                                    price: e.target.value
+                                    price: parseInt(e.target.value, 10)
                                 })
                             }
                             additionalClass="col-md-3 col-sm-6"
                         />
-
+                    </div>
+                    <div className="row">
                         {/* AMOUNT */}
                         <FormInput
-                            label="Amount"
+                            label="Total mount"
                             type="text"
+                            disabled={true}
                             value={formData.amount}
                             onChangeHandler={e =>
                                 updateForm({
@@ -59,8 +61,47 @@ class AdminAddProduct extends Component<Props> {
                             }
                             additionalClass="col-md-3 col-sm-6"
                         />
+                        <FormInput
+                            label="New amount"
+                            type="text"
+                            value={formData.new_amount}
+                            onChangeHandler={e =>
+                                updateForm({
+                                    new_amount: e.target.value
+                                })
+                            }
+                            additionalClass="col-md-3 col-sm-6"
+                        />
+                        <FormInput
+                            label="Stock"
+                            disabled={true}
+                            type="text"
+                            value={formData.stock}
+                            onChangeHandler={e =>
+                                updateForm({
+                                    stock: e.target.value
+                                })
+                            }
+                            additionalClass="col-md-3 col-sm-6"
+                        />
+                        <button
+                            className="btn btn-success smallcustom"
+                            onClick={ev => {
+                                ev.preventDefault();
+                                updateForm({
+                                    new_amount: parseInt(formData.new_amount, 10)
+                                });
+                                updateForm({
+                                    stock: parseInt(formData.amount, 10) + parseInt(formData.new_amount, 10)
+                                });
+                                updateForm({
+                                    amount: parseInt(formData.new_amount, 10) + parseInt(formData.amount, 10)
+                                });
+                            }}
+                        >
+                            <i className="btn btn-success fa fa-check">Apply</i>
+                        </button>
                     </div>
-
                     <div className="row">
                         {/* BRAND */}
                         <FormInput

@@ -112,7 +112,6 @@ class Products extends Component {
         }
 
         if (isQueryStringUpdated && !isOnComponentLoad) {
-            console.log("UPDATE");
             this.fetchProducts(this.props.currentPage, this.props.pageSize);
         }
     };

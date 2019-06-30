@@ -1,13 +1,15 @@
 // Internal Dependencies
-// import Types from "../pages/common/duck/types";
 import ws from "./WebService";
+import Swal from "sweetalert2";
 import jwtDecode from "jwt-decode";
 import TokenApi from "./TokenApi";
 import { USER_TYPE } from "./../config/constants";
-// const loginSuccess = payload => ({
-//     type: Types.UPDATE_AUTH_STATUS,
-//     payload
-// });
+
+const INTERNAL_CONFIG = {
+    INTERVAL_DURATION: 1000,
+    SWAL_TIMEOUT: 10000
+};
+
 export default {
     verifyToken: changeLoginStatus => {
         if (!localStorage.getItem("authToken")) {
@@ -87,16 +89,47 @@ export default {
         }
         // return true;
     },
+
     login: (username, password) => {
         return new Promise((resolve, reject) => {
             ws.login(username, password)
                 .then(res => {
                     let auth = JSON.parse(res);
-                    if (auth.auth === true && auth.authToken && auth.refreshToken) {
-                        localStorage.setItem("authToken", auth.authToken);
-                        localStorage.setItem("refreshToken", auth.refreshToken);
-                        // localStorage.setItem("role", auth.permission);
-                        resolve(true);
+                    if (auth) {
+                        if (auth.user && auth.user.active === "FALSE") {
+                            Swal({
+                                title: "Login Failure!!",
+                                timer: INTERNAL_CONFIG.SWAL_TIMEOUT,
+                                allowOutsideClick: false,
+                                onOpen: () => {
+                                    Swal.showLoading();
+                                    Swal({
+                                        type: "error",
+                                        title: "Login Fail!!",
+                                        text: `Your account has been blocked.`,
+                                        onClose: () => {
+                                            resolve(false);
+                                        }
+                                    });
+                                }
+                            }).then(modalInfo => {
+                                if (modalInfo.dismiss === Swal.DismissReason.timer) {
+                                    Swal({
+                                        type: "question",
+                                        title: "Noo...",
+                                        text: `Server time out! Please try again later.`
+                                    });
+                                    resolve(false);
+                                }
+                            });
+
+                            resolve(false);
+                        } else if (auth.auth === true && auth.authToken && auth.refreshToken) {
+                            localStorage.setItem("authToken", auth.authToken);
+                            localStorage.setItem("refreshToken", auth.refreshToken);
+                            // localStorage.setItem("role", auth.permission);
+                            resolve(true);
+                        }
                     }
 
                     resolve(false);

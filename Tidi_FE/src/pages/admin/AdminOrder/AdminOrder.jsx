@@ -87,13 +87,11 @@ class AdminOrder extends Component {
         WebService.adminGetAllOrders(AuthService.getTokenUnsafe(), pageSize, (currentPage - 1) * pageSize, query).then(res => {
             const result = JSON.parse(res);
             // this.props.fetchOrders(result.orders);
-            console.log(result);
             if (result.orders && result.status === ACTIVE_TYPE.TRUE) {
                 result.orders.forEach(order => {
                     // backup original order status
                     order.originalStatus = order.status;
                 });
-
                 this.setState({
                     orders: result.orders
                 });
@@ -267,7 +265,6 @@ class AdminOrder extends Component {
                 </Fragment>
             );
         });
-
         return r;
     };
 

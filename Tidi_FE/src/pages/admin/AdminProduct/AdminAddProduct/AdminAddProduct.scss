@@ -1,12 +1,17 @@
-@import 'src/assets/scss/theme_color';
-@import 'src/assets/scss/variables';
-@import 'src/assets/scss/mixin';
-@import 'src/assets/scss/responsive';
+@import "src/assets/scss/theme_color";
+@import "src/assets/scss/variables";
+@import "src/assets/scss/mixin";
+@import "src/assets/scss/responsive";
 
 label {
     font-weight: bold;
 }
 
+.smallcustom {
+    height: 15%;
+    align-content: center;
+    margin-top: 3%;
+}
 .is-required {
     color: red;
 }

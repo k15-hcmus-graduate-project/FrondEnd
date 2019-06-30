@@ -1,6 +1,7 @@
 // StyleSheets
 import React, { Component } from "react";
 import _ from "lodash";
+import { Link } from "react-router-dom";
 import PropTypes from "prop-types";
 import { FacebookProvider, Comments } from "react-facebook";
 import "./ProductDetail.scss";
@@ -8,6 +9,7 @@ import WebService from "../../../services/WebService";
 import AuthService from "../../../services/AuthService";
 import { showAlert } from "../../../helpers/lib";
 import { withCommas } from "../../../helpers/lib";
+import { ROUTE_NAME } from "../../../routes/main.routing";
 import Loader from "../../common/Loader/Loader";
 import { Parse, client } from "../../../helpers/parse";
 
@@ -17,6 +19,8 @@ const INTITIAL_STATE = {
     numberOfViewer: 0,
     refresh: true
 };
+
+const sleep = ms => new Promise(r => setTimeout(() => r(), ms));
 
 class ProductDetail extends Component {
     subscription;
@@ -46,55 +50,53 @@ class ProductDetail extends Component {
         }
     };
 
-    doSomethingBeforeUnload = async () => {
-        await WebService.descViewer(this.state.product.id)
-            .then(res => {
-                console.log("descrease viewer successful");
-                client.unsubscribe(this.subscription);
-            })
-            .catch(err => {
-                console.log("cannot query from back4app: ", err);
-                client.unsubscribe(this.subscription);
-            });
-    };
-
     // Setup the `beforeunload` event listener
     setupBeforeUnloadListener = () => {
         window.addEventListener("beforeunload", async ev => {
-            console.log("decrease view props after change in before unload listener: ", this.props.decreaseViewer);
             ev.preventDefault();
-            await this.doSomethingBeforeUnload();
+            await WebService.descViewer(this.state.product.id);
+            await sleep(1300);
         });
     };
 
     // phuong thuc auto thuc hiẹn sau khi page duoc load len
-    componentDidMount = () => {
-        var parseQuery = new Parse.Query("product");
-        this.subscription = client.subscribe(parseQuery);
+    componentDidMount = async () => {
+        await sleep(2000);
         const { id } = this.props.match.params;
+
+        var parseQuery = new Parse.Query("product");
+        if (id) {
+            await parseQuery.equalTo("id", parseInt(id, 10));
+        }
+        await parseQuery
+            .first()
+            .then(async obj => {
+                var i = obj.get("viewer");
+                obj.set("viewer", i + 1);
+                await obj.save();
+            })
+            .catch(err => {
+                console.log("cannot connect parse: ", err);
+            });
+
+        this.subscription = client.subscribe(parseQuery);
         this.subscription.on("update", object => {
-            if (object.id === id) {
-                this.setState({
-                    numberOfViewer: object.get("viewer")
-                });
-                console.log("The number of people watching this product: ", this.state.numberOfViewer);
-            }
+            // if (object.get("id") === id) {
+            this.setState({ numberOfViewer: object.get("viewer") });
+            console.log("The number of people watching this product: ", this.state.numberOfViewer);
+            // }
         });
 
+        parseQuery.first().then(res => {
+            if (res.get("viewer")) this.setState({ numberOfViewer: parseInt(res.get("viewer"), 10) });
+        });
         // Activate the event listener
         this.setupBeforeUnloadListener();
     };
 
     componentWillUnmount = async () => {
-        await WebService.descViewer(this.state.product.id)
-            .then(res => {
-                console.log("descrease viewer successful");
-                client.unsubscribe(this.subscription);
-            })
-            .catch(err => {
-                console.log("cannot query from back4app: ", err);
-                client.unsubscribe(this.subscription);
-            });
+        await WebService.descViewer(this.state.product.id);
+        await sleep(1300);
     };
 
     fetchProduct = () => {
@@ -120,7 +122,8 @@ class ProductDetail extends Component {
         if (isLoggedIn) {
             WebService.getCart(AuthService.getTokenUnsafe()).then(res => {
                 const result = JSON.parse(res);
-                if (result.status.status === "TRUE") {
+                console.log("fetch cart: ", result);
+                if (result.status === true) {
                     if (result.products) {
                         result.products.forEach(prd => (prd.images = JSON.parse(prd.images)));
                     }
@@ -147,8 +150,9 @@ class ProductDetail extends Component {
                 cartItemAmount += 1;
                 WebService.addItemToCart(AuthService.getTokenUnsafe(), product.id, cartItemAmount).then(r => {
                     const res = JSON.parse(r);
-                    if (res.status) {
-                        showAlert(`Added ${product.productName} to Cart!`);
+                    console.log("insert cart: ", res);
+                    if (res.status === true) {
+                        showAlert(`Added ${product.product_name} to Cart!`);
                         this.fetchCartProducts();
                     }
                 });
@@ -174,6 +178,9 @@ class ProductDetail extends Component {
         return r;
     };
 
+    componentWillUnmount = () => {
+        client.unsubscribe(this.subscription);
+    };
     render = () => {
         const { productFound, product, numberOfViewer } = this.state;
         if (!productFound || !product) {
@@ -218,15 +225,15 @@ class ProductDetail extends Component {
 
                     {/* <!-- Single Product Description --> */}
                     <div className="single_product_desc clearfix">
-                        {numberOfViewer !== 0 && (
-                            <div className="d-flex justify-content-center p-5">
+                        {numberOfViewer > 0 && (
+                            <div className="d-flex justify-content-center p-5 viewer">
                                 There has {numberOfViewer} users watching this product with you.
                             </div>
                         )}
                         <span>{product.brand && product.brand[0].brand_name}</span>
-                        <a href="cart.html">
+                        <Link to={product.id ? `/product/${product.id}` : `/`}>
                             <h2>{product.product_name}</h2>
-                        </a>
+                        </Link>
                         <p className="product-price">
                             {product.discPercent !== 0 && <span className="old-price">{withCommas(product.price) + " ₫"}</span>}
                             {withCommas(discountedPrice) + " ₫  "}
@@ -246,12 +253,17 @@ class ProductDetail extends Component {
                                 >
                                     Add to cart
                                 </button>
-                                {/* <!-- Favourite --> */}
-                                <div className="product-favourite ml-4">
-                                    <a href="#/" className="favme fa fa-heart">
-                                        <span />
-                                    </a>
-                                </div>
+                                &#160;
+                                <Link to={ROUTE_NAME.MAP_DIRECTION}>
+                                    <button
+                                        type="button"
+                                        name="findstore"
+                                        style={{ backgroundColor: "darkcyan" }}
+                                        className="btn essence-btn btn-info btn-success"
+                                    >
+                                        Find Store
+                                    </button>
+                                </Link>
                             </div>
 
                             <div className="cart-fav-box d-flex align-items-center justify-content-end">

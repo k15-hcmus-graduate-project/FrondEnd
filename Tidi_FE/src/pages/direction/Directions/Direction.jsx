@@ -28,38 +28,40 @@ class Direction extends Component {
         };
     }
 
-    componentWillMount = () => {
+    componentWillMount = async () => {
         // let parseAccount = new Parse.Query("accounts");
         // console.log(parseAccount);
         // this.subscription = client.subscribe(parseAccount);
         this.getCurrentLocation();
-        this.getAllAddresses();
+        await this.getAllAddresses();
     };
 
     componentDidMount = () => {
         if (!this.state.address) {
             this.getAllAddresses();
         }
-        setInterval(() => {
-            const { lat, lng } = this.state;
-            navigator.geolocation.getCurrentPosition(
-                position => {
-                    var m_lat = position.coords.latitude;
-                    var m_lng = position.coords.longitude;
-                    const distance = new window.H.geo.Point(m_lat, m_lng).distance(new window.H.geo.Point(lat, lng));
-                    console.log("distance now: ", distance);
-                    if (distance > 20) {
-                        this.setState({
-                            lat: m_lat,
-                            lng: m_lng
-                        });
-                    }
-                },
-                () => {
-                    alert("Geocoder failed");
-                }
-            );
-        }, 3000);
+        // let i = 1;
+        // setInterval(() => {
+        //     const { lat, lng } = this.state;
+        //     navigator.geolocation.getCurrentPosition(
+        //         position => {
+        //             i += 1;
+        //             var m_lat = position.coords.latitude;
+        //             var m_lng = position.coords.longitude;
+        //             const distance = new window.H.geo.Point((m_lat += i * 5), (m_lng += i * 5)).distance(new window.H.geo.Point(lat, lng));
+        //             console.log("distance now: ", distance);
+        //             // if (distance > 20) {
+        //             // this.setState({
+        //             //     lat: m_lat,
+        //             //     lng: m_lng
+        //             // });
+        //             // }
+        //         },
+        //         () => {
+        //             alert("Geocoder failed");
+        //         }
+        //     );
+        // }, 5000);
     };
 
     getCurrentLocation = () => {
@@ -82,10 +84,11 @@ class Direction extends Component {
     componentWillReceiveProps = nextProps => {
         // this.getCurrentLocation();
     };
-    getAllAddresses = () => {
-        WebService.getAllLocation()
+    getAllAddresses = async () => {
+        await WebService.getAllLocation()
             .then(res => {
                 const address = JSON.parse(res).addresses;
+                console.log("address stores: ", address);
                 this.setState({
                     address: address
                 });
@@ -125,15 +128,7 @@ class Direction extends Component {
                             <div className="col-10">
                                 <div className="regular-page-content-wrapper section-padding-80">
                                     <div className="regular-page-text App">
-                                        <Map
-                                            app_id={here.app_id}
-                                            app_code={here.app_code}
-                                            lat={lat}
-                                            lng={lng}
-                                            zoom="100"
-                                            address={address}
-                                            // accLocation={this.state.userLocation}
-                                        />
+                                        <Map app_id={here.app_id} app_code={here.app_code} lat={lat} lng={lng} zoom={1} address={address} />
                                     </div>
                                 </div>
                             </div>

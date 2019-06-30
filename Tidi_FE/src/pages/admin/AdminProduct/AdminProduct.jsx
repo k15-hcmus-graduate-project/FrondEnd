@@ -2,16 +2,21 @@
 import React, { Fragment, Component } from "react";
 import PropTypes from "prop-types";
 import "./AdminProduct.scss";
+import { Link } from "react-router-dom";
 import WebService from "../../../services/WebService";
 import AuthService from "../../../services/AuthService";
 import HelperTool, { showAlert } from "../../../helpers/lib";
+import { ROUTE_NAME } from "../../../routes/main.routing";
 import { DEFAULT_FORMDATA, ACTIVE_TYPE } from "../../../config/constants";
 import Modal from "../../common/Modal";
 import AdminAddProduct from "./AdminAddProduct";
 import Paginator from "../../common/Paginator";
 import Message from "../../common/FormMessage";
+import { Parse, client } from "../../../helpers/parse";
+import Loader from "../../common/Loader/Loader";
 
 const INTIAL_STATE = {
+    products: [],
     showLoadingBar: false,
     message: null,
     brands: [],
@@ -30,6 +35,7 @@ const INTERNAL_CONFIG = {
     DETAIL_HEADERS: ["Images", "Description"]
 };
 type State = {
+    products: Array<any>,
     brands: Array<any>,
     industries: Array<any>,
     branches: Array<any>,
@@ -52,7 +58,8 @@ class AdminProduct extends Component<State> {
         }),
         formData: PropTypes.object
     };
-
+    products = [];
+    subscription = null;
     productToBlock = null;
     originalProductInfo = {};
     searchInterval = null;
@@ -92,6 +99,23 @@ class AdminProduct extends Component<State> {
 
     componentDidMount = () => {
         this._isMounted = true;
+
+        let parseQuery = new Parse.Query("product");
+        this.subscription = client.subscribe(parseQuery); // subcribe client parse
+        this.subscription.on("update", async object => {
+            if (object.get("changeAmount") === true) {
+                this.products.find(x => {
+                    if (x.id === parseInt(object.get("id"), 10)) {
+                        return (x.amount = parseInt(object.get("amount"), 10));
+                    }
+                    return "";
+                });
+                console.log("data: ", this.products);
+                this.setState({ products: this.products });
+                object.set("changeAmount", false);
+                await object.save();
+            }
+        });
     };
 
     componentWillUnmount = () => {
@@ -112,7 +136,10 @@ class AdminProduct extends Component<State> {
             .then(res => {
                 const result = JSON.parse(res);
                 if (result.status === ACTIVE_TYPE.TRUE && result.products) {
+                    this.products = result.products;
+                    this.setState({ products: this.products });
                     this.props.fetchProducts(result.products);
+
                     this.handleFilterChange({
                         totalItems: result.totalItems
                     });
@@ -187,7 +214,6 @@ class AdminProduct extends Component<State> {
         });
         for (let attr in data) {
             if (!(attr in DEFAULT_FORMDATA.AdminAddProduct) && data[attr]) {
-                console.log(data[attr]);
                 data[attr + "Id"] = data[attr].id;
                 delete data[attr];
             } else if (data[attr] === null) {
@@ -266,7 +292,7 @@ class AdminProduct extends Component<State> {
     };
 
     handleUpdateProduct = () => {
-        const { formData, productName, currentPage, pageSize, query } = this.props;
+        const { formData, productName, currentPage, pageSize, query, username } = this.props;
         return new Promise((resolve, reject) => {
             const newInfo = {};
             for (let attr in formData) {
@@ -278,10 +304,16 @@ class AdminProduct extends Component<State> {
                 this.setState({
                     message: <Message content="Updating product..." />
                 });
+                var test = new Date();
+                var time =
+                    test.getFullYear() +
+                    (test.getMonth() < 9 ? "0" + (test.getMonth() + 1) : "" + test.getMonth() + 1) +
+                    (test.getDate() < 9 ? "0" + test.getDate() : test.getDate());
+                newInfo.last_updated = time;
 
+                newInfo.updated_by = username;
                 WebService.adminUpdateProduct(AuthService.getTokenUnsafe(), formData.id, newInfo).then(res => {
                     const resObj = JSON.parse(res);
-                    console.log(resObj);
                     if (resObj.status === ACTIVE_TYPE.TRUE) {
                         this.setState({
                             message: <Message color="green" content="Update product successfully" />
@@ -403,8 +435,12 @@ class AdminProduct extends Component<State> {
             r.push(
                 <Fragment key={id}>
                     <tr>
-                        <td>{product.id}</td>
-                        <td>{product.product_name}</td>
+                        <td>
+                            <Link to={{ pathname: ROUTE_NAME.ADMIN.PRODUCTREVIEW, state: { id: product.id } }}>{product.id}</Link>
+                        </td>
+                        <td>
+                            <Link to={{ pathname: ROUTE_NAME.ADMIN.PRODUCTREVIEW, state: { id: product.id } }}>{product.product_name}</Link>
+                        </td>
                         <td>{HelperTool.withCommas(product.price)} ₫</td>
                         <td>{product.amount}</td>
                         <td>{product.brand.brand_name}</td>
@@ -444,6 +480,18 @@ class AdminProduct extends Component<State> {
                                 >
                                     <i className="fa fa-ban" /> {product.active === ACTIVE_TYPE.TRUE ? "Block" : "Unblock"}
                                 </button>
+                                &#160;&#160;
+                                <Link
+                                    to={{
+                                        pathname: ROUTE_NAME.ADMIN.PRODUCTHISTORY,
+                                        state: { id: product.id, name: product.product_name }
+                                    }}
+                                >
+                                    <button className="btn btn-primary btn-sm">
+                                        <i className="fa fa-history" />
+                                        &#160; History
+                                    </button>
+                                </Link>
                             </div>
                         </td>
                     </tr>
@@ -474,13 +522,13 @@ class AdminProduct extends Component<State> {
                 </Fragment>
             );
         });
-
         return r;
     };
 
     render = () => {
-        const { products, currentPage, pageSize, query, totalItems } = this.props;
+        const { currentPage, pageSize, query, totalItems } = this.props;
         const { branches, brands, industries, categories, message, showLoadingBar } = this.state;
+        if (!this.state.products) return <Loader />;
         return (
             <div className="container-fluid">
                 <Modal
@@ -598,7 +646,7 @@ class AdminProduct extends Component<State> {
                             <div className="table-container table-responsive">
                                 <table className="table table-hover table-sm table-bordered">
                                     <thead>{HelperTool.generateTableHeaders(INTERNAL_CONFIG.MAIN_HEADERS)}</thead>
-                                    <tbody>{this.generateTableRows(products)}</tbody>
+                                    <tbody>{this.generateTableRows(this.state.products)}</tbody>
                                 </table>
                                 <Paginator
                                     handlePageChange={currentPage => {

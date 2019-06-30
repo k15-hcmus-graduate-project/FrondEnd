@@ -1,7 +1,6 @@
 // StyleSheets
 import React, { Component } from "react";
 import "./Footer.scss";
-
 class Footer extends Component {
     render = () => {
         return (
@@ -82,7 +81,12 @@ class Footer extends Component {
                         <div className="col-12 col-md-6">
                             <div className="single_widget_area">
                                 <div className="footer_social_area">
-                                    <a href="/" data-toggle="tooltip" data-placement="top" title="Facebook">
+                                    <a
+                                        href="https://www.fb.com/DangQuang.IT.HCMUS"
+                                        data-toggle="tooltip"
+                                        data-placement="top"
+                                        title="Facebook"
+                                    >
                                         <i className="fa fa-facebook" aria-hidden="true" />
                                         <span style={{ display: "none" }}>f</span>
                                     </a>

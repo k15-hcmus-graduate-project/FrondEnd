@@ -4,11 +4,14 @@ import _ from "lodash";
 import { Formik } from "formik";
 import { Link, Redirect, withRouter } from "react-router-dom";
 import PropTypes from "prop-types";
+import toaster from "toasted-notes";
 import "./Header.scss";
+import { USER_TYPE } from "../../../config/constants";
 import { ROUTE_NAME } from "../../../routes/main.routing";
 import AuthService from "../../../services/AuthService";
 import WebService from "../../../services/WebService";
 import { QUERY_PARAMS, ACTIVE_TYPE } from "../../../config/constants";
+import { Parse, client } from "../../../helpers/parse";
 
 const INITIAL_STATE = {
     openDropdownMenu: false,
@@ -26,6 +29,8 @@ const INTERNAL_CONFIG = {
 };
 
 class Header extends Component {
+    subscription;
+
     static propTypes = {
         fetchIndustries: PropTypes.func,
         changeIndustryHover: PropTypes.func,
@@ -42,17 +47,126 @@ class Header extends Component {
         super(props);
         this.state = INITIAL_STATE;
     }
-
-    componentDidMount = () => {
-        const { changeLoginStatus, history, toggleNotification } = this.props;
+    componentDidMount = async () => {
+        const { changeLoginStatus, history, toggleNotification, username, permission } = this.props;
         const params = new URLSearchParams(history.location.search);
         const emailVerificationCode = params.get("email");
 
         this.fetchIndustries();
-        AuthService.isLoggedIn().then(status => {
+        AuthService.isLoggedIn().then(async status => {
             if (status.tokenIsValid) {
-                changeLoginStatus(status.tokenIsValid);
+                // const { username } = this.props;
+                var parseQuery = new Parse.Query("orders");
 
+                this.subscription = client.subscribe(parseQuery);
+                this.subscription.on("update", object => {
+                    console.log("order update: ", object.get("username"));
+                    if (object.get("username") === username) {
+                        toaster.notify(
+                            ({ onClose }) => (
+                                <div className="customNotic">
+                                    <span style={{ fontSize: "20px" }}>
+                                        Your order &#160;
+                                        <strong style={{ color: "red" }}>{object.get("uid")}</strong>
+                                        <br />
+                                        has been updated!!
+                                    </span>
+                                    <br />
+                                    <div style={{ testAlign: "center" }}>
+                                        <button
+                                            className="btn btn-success"
+                                            onClick={() => {
+                                                console.log("id parse: ", object.get("id"));
+                                                this.setState({
+                                                    redirectTo: (
+                                                        <Redirect
+                                                            to={{
+                                                                pathname: `${ROUTE_NAME.ORDER_DETAIL}/${object.get("uid")}`,
+                                                                state: { id: object.get("id") }
+                                                            }}
+                                                        />
+                                                    )
+                                                });
+                                            }}
+                                        >
+                                            Check Product
+                                        </button>
+                                        &#160;&#160;
+                                        <button className="btn btn-warning" onClick={onClose}>
+                                            Close
+                                        </button>
+                                    </div>
+                                </div>
+                            ),
+                            {
+                                position: "bottom-right", // top-left, top, top-right, bottom-left, bottom, bottom-right
+                                duration: 6000 // This notification will not automatically close
+                            }
+                        );
+                    }
+                });
+
+                // Listen update product by another admin
+                if (permission === USER_TYPE.ADMIN) {
+                    let parseQueryPro = new Parse.Query("product");
+                    let subscriptionPro = client.subscribe(parseQueryPro); //
+                    subscriptionPro.on("update", object => {
+                        if (object.get("updated_by") !== username) {
+                            if (object.get("update") === "true") {
+                                object.set("update", "false");
+                                object.save().then(res => {
+                                    console.log("update to fasle");
+                                });
+                                var id = object.get("id");
+                                toaster.notify(
+                                    ({ onClose }) => (
+                                        <div className="customNotic">
+                                            <span style={{ fontSize: "20px" }}>
+                                                Product &#160;
+                                                <strong style={{ color: "red" }}>
+                                                    {object.get("id")} - {object.get("product_name")}
+                                                </strong>
+                                                <br />
+                                                has been updated by <strong style={{ color: "red" }}>{object.get("updated_by")}! </strong>
+                                            </span>
+                                            <br />
+                                            <div style={{ testAlign: "center" }}>
+                                                <button
+                                                    className="btn btn-success"
+                                                    onClick={() => {
+                                                        this.setState({
+                                                            redirectTo: (
+                                                                <Redirect
+                                                                    exact={true}
+                                                                    to={{
+                                                                        pathname: ROUTE_NAME.ADMIN.PRODUCTREVIEW,
+                                                                        state: { id: id }
+                                                                    }}
+                                                                />
+                                                            )
+                                                        });
+                                                    }}
+                                                >
+                                                    Check Product
+                                                </button>
+                                                &#160;&#160;
+                                                <button className="btn btn-warning" onClick={onClose}>
+                                                    Close
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ),
+                                    {
+                                        position: "bottom-right", // top-left, top, top-right, bottom-left, bottom, bottom-right
+                                        duration: null // This notification will not automatically close
+                                    }
+                                );
+                            }
+                        }
+                    });
+                }
+
+                changeLoginStatus(status.tokenIsValid);
                 if (status.emailIsVerified === ACTIVE_TYPE.FALSE && !emailVerificationCode) {
                     toggleNotification(INTERNAL_CONFIG.emailNotification, "alert-warning");
                 }
@@ -177,7 +291,7 @@ class Header extends Component {
                     <nav className="classy-navbar" id="essenceNav">
                         {/* <!-- Logo --> */}
                         <Link className="nav-brand" to={ROUTE_NAME.HOME}>
-                            <img src="/img/core-img/logo.png" alt="" />
+                            <img src="/img/core-img/logo.png" alt="TIDI" />
                         </Link>
                         {/* <!-- Navbar Toggler --> */}
                         <div
@@ -242,7 +356,6 @@ class Header extends Component {
                             {/* <!-- Nav End --> */}
                         </div>
                     </nav>
-
                     {/* <!-- Header Meta Data --> */}
                     <div className="header-meta d-flex clearfix justify-content-end">
                         {/* <!-- Search Area --> */}
@@ -321,9 +434,9 @@ class Header extends Component {
                                     </Link>
                                 </div>
                             )}{" "}
-                            <Link to={ROUTE_NAME.MAP_DIRECTION} className="btn btn-outline-secondary">
+                            {/* <Link to={ROUTE_NAME.MAP_DIRECTION} className="btn btn-outline-secondary">
                                 To Store
-                            </Link>
+                            </Link> */}
                         </div>
                     </div>
                 </div>

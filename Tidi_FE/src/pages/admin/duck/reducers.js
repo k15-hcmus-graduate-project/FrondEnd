@@ -19,6 +19,11 @@ const INITIAL_STATE = {
             ...DEFAULT_FORMDATA.AdminAddProduct
         }
     },
+    AdminAddStore: {
+        formData: {
+            ...DEFAULT_FORMDATA.AdminAddStore
+        }
+    },
     AdminBrand: {},
     AdminAddBrand: {
         formData: {
@@ -94,6 +99,16 @@ const adminReducer = (state = INITIAL_STATE, action) => {
                 AdminAddProduct: {
                     formData: {
                         ...state.AdminAddProduct.formData,
+                        ...action.payload
+                    }
+                }
+            };
+        case Types.ADMIN_STORE_UPDATE_FORM:
+            return {
+                ...state,
+                AdminAddStore: {
+                    formData: {
+                        ...state.AdminAddStore.formData,
                         ...action.payload
                     }
                 }

@@ -2,6 +2,7 @@
 import React, { Component } from "react";
 import Swal from "sweetalert2";
 import { Redirect } from "react-router-dom";
+import { Label, Input } from "reactstrap";
 import PropTypes from "prop-types";
 import "./CheckoutDetail.scss";
 import WebService from "../../../services/WebService";
@@ -10,6 +11,7 @@ import { PAYMENT_METHOD, ACTIVE_TYPE } from "../../../config/constants";
 import { ROUTE_NAME } from "../../../routes/main.routing";
 import LIB, { withCommas } from "../../../helpers/lib";
 import FormInput from "../../common/FormInput";
+import Loader from "../../common/Loader/Loader";
 
 const INITIAL_STATE = {
     fullName: "",
@@ -20,7 +22,7 @@ const INITIAL_STATE = {
     shippingFee: null,
     shippingMethod: {},
     couponCode: "",
-
+    store: "",
     fullNameIsInvalid: false,
     shippingMethodIsInvalid: false,
     emailIsInvalid: false,
@@ -40,6 +42,7 @@ const INTERNAL_CONFIG = {
 };
 
 class CheckoutDetail extends Component {
+    stores = [];
     static propTypes = {
         isLoggedIn: PropTypes.bool,
         isSelected: PropTypes.bool,
@@ -62,6 +65,24 @@ class CheckoutDetail extends Component {
     componentWillMount = () => {
         this.fetchCartProducts();
         this.fetchUserInfo();
+        this.fetchStores();
+    };
+
+    fetchStores = () => {
+        WebService.getAllAddress(AuthService.getTokenUnsafe())
+            .then(res => {
+                const result = JSON.parse(res);
+                if (result.status === ACTIVE_TYPE.TRUE && result.stores) {
+                    console.log("data stores: ", result.stores);
+                    this.stores = result.stores;
+                    this.setState({ store: result.stores[0].name + " - " + result.stores[0].address });
+                } else {
+                    console.log(result.message, "error");
+                }
+            })
+            .catch(err => {
+                console.log("Have error when get admin products.", err);
+            });
     };
 
     fetchCartProducts = () => {
@@ -109,10 +130,11 @@ class CheckoutDetail extends Component {
             const { cartItems } = this.props;
             if (cartItems) {
                 cartItems.map(item => {
-                    return products.push({ proID: item.id, price: item.price, amount: item.amount });
+                    return products.push({ proID: item.id, price: item.price, amount: item.amount, store: this.state.store });
                 });
             }
-            const { couponCode, fullName, phoneNumber, email, address, shippingNote, shippingMethod } = this.state;
+            const { couponCode, fullName, phoneNumber, email, address, shippingNote, shippingMethod, store } = this.state;
+            console.log("data checkout: ", store);
             WebService.toCheckout(
                 AuthService.getTokenUnsafe(),
                 couponCode,
@@ -332,6 +354,7 @@ class CheckoutDetail extends Component {
             errorMessage
         } = this.state;
         const { cartItems } = this.props;
+        if (!this.stores || this.stores.length === 0) return <Loader />;
         return (
             <div>
                 {redirectTo}
@@ -438,10 +461,14 @@ class CheckoutDetail extends Component {
 
                                             <div className="col-12">
                                                 <div className="custom-control custom-checkbox d-block mb-2">
-                                                    <input type="checkbox" className="custom-control-input" id="customCheck1" />
-                                                    <label className="custom-control-label" htmlFor="customCheck1">
+                                                    <Input type="checkbox" className="custom-control-input" id="customCheck1" />
+                                                    <Label
+                                                        style={{ position: "static" }}
+                                                        className="custom-control-label"
+                                                        htmlFor="customCheck1"
+                                                    >
                                                         Terms and conitions
-                                                    </label>
+                                                    </Label>
                                                 </div>
                                             </div>
                                         </div>
@@ -499,6 +526,30 @@ class CheckoutDetail extends Component {
                                                         </div>
                                                     </div>
                                                 </li>
+
+                                                <li className="item-header">
+                                                    <div className="row">
+                                                        <div className="col-md-4 d-flex align-items-center">
+                                                            <span>STORE</span>
+                                                        </div>
+                                                        <FormInput
+                                                            type="select"
+                                                            additionalClass="col-md-8 mb-0"
+                                                            // value={this.stores[0].name}
+                                                            onChangeHandler={e => {
+                                                                var index = e.nativeEvent.target.selectedIndex;
+                                                                var store = e.target.value + " - " + e.nativeEvent.target[index].text;
+                                                                console.log(e.nativeEvent.target[index].text);
+                                                                this.setState({ store: store });
+                                                            }}
+                                                            options={
+                                                                this.stores &&
+                                                                this.stores.map(store => ({ value: store.name, name: store.address }))
+                                                            }
+                                                        />
+                                                    </div>
+                                                </li>
+
                                                 <li className="total-header">
                                                     <span>Total</span>
                                                     <span>

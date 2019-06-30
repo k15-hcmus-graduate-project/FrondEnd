@@ -31,6 +31,9 @@ export const API_PRODUCT_ADMIN_BRAND_BRAND = "/product/admin/brand/brand";
 export const API_PRODUCT_ADMIN_BRAND_UPDATE = "/product/admin/brand";
 export const API_PRODUCT_ADMIN_BRAND_ADD = "/product/admin/brand/add";
 export const API_PRODUCT_ADMIN_INDUSTRY_ALL = "/product/admin/industry";
+export const API_PRODUCT_ADMIN_STORE_ALL = "/product/admin/store";
+export const API_PRODUCT_ADMIN_HISTORY = "/product/admin/history";
+export const API_PRODUCT_ADMIN_STORE_ADD = "/product/admin/store";
 export const API_PRODUCT_ADMIN_BRANCH_ALL = "/product/admin/branch";
 export const API_PRODUCT_ADMIN_CATEGORY_ALL = "/product/admin/category";
 
@@ -47,3 +50,6 @@ export const API_LOCATION_GET = "/location";
 export const API_LOCATION_UPDATE = "/location";
 export const API_LOCATION_USER_UPDATE = "/location/user";
 export const API_LOCATION_USER_GET = "/location/user";
+
+// change user
+export const API_CHANGE_NUMBER_USER = "/users/connect";

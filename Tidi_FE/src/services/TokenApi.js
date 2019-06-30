@@ -2,6 +2,7 @@
 import jwtDecode from "jwt-decode";
 import api from "../api/Api";
 import { API_BASE_URL } from "../config/AppConfig";
+
 class TokenApi {
     static postVerifyToken() {
         const { user } = jwtDecode(localStorage.getItem("authToken"));

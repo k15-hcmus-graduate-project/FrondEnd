@@ -48,7 +48,7 @@ class Login extends Component {
         );
     };
 
-    render() {
+    render = () => {
         const initValues = {
             username: "",
             password: ""
@@ -81,7 +81,7 @@ class Login extends Component {
                                             });
                                         } else {
                                             this.setState({
-                                                message: "Username or password is incorrect"
+                                                message: "Check your username, password or contact to admin for more."
                                             });
                                         }
                                     });
@@ -164,7 +164,7 @@ class Login extends Component {
                 </div>
             </div>
         );
-    }
+    };
 }
 
 export default Login;
